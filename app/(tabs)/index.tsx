@@ -15,9 +15,7 @@ import { Menu, Briefcase, Heart, BookOpen, Palette, Users, Sparkles, X, Search, 
 import { useTheme } from '@/store/theme-context';
 
 import { useFocusFlow } from '@/store/focusflow-context';
-import { useNavigation } from '@react-navigation/native';
-
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import { useRouter } from 'expo-router';
 import ProgressRing from '@/components/ProgressRing';
 import { getBuildingImageSource, logAllBuildingUrls } from '@/constants/buildings';
 
@@ -31,7 +29,7 @@ const TOWER_TABS = [
 ];
 
 export default function HomeScreen() {
-  const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const router = useRouter();
   const { colors } = useTheme();
   const {
     currentSession,
@@ -704,7 +702,7 @@ export default function HomeScreen() {
         {/* Clean Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.openDrawer()}
+            onPress={() => router.push('/')}
             style={styles.menuButton}
             accessibilityLabel="Open menu"
           >
@@ -713,7 +711,7 @@ export default function HomeScreen() {
           
           <TouchableOpacity 
             style={styles.energyBadge}
-            onPress={() => navigation.navigate('donate' as never)}
+            onPress={() => router.push('/(tabs)/donate')}
           >
             <Text style={styles.energyText}>{totalEnergy} ⚡</Text>
           </TouchableOpacity>
