@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import ProgressRing from '@/components/ProgressRing';
+import { getBuildingImageSource, logAllBuildingUrls } from '@/constants/buildings';
 
 const TOWER_TABS = [
   { id: 'career', label: 'Career', icon: Briefcase },
@@ -46,6 +47,7 @@ export default function HomeScreen() {
   const [selectedDuration, setSelectedDuration] = useState(25); // minutes
   const [showTagModal, setShowTagModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [useRemoteAssets, setUseRemoteAssets] = useState(false); // Toggle for testing
 
 
   const buildingScaleAnim = useRef(new Animated.Value(1)).current;
@@ -58,6 +60,11 @@ export default function HomeScreen() {
   const sessionProgress = currentSession?.isActive
     ? (currentSession.duration - (currentSession.remaining || 0)) / currentSession.duration
     : 0;
+
+  // Debug: Log building URLs on mount
+  useEffect(() => {
+    logAllBuildingUrls();
+  }, []);
 
   // Set building state based on session status
   useEffect(() => {
@@ -676,6 +683,19 @@ export default function HomeScreen() {
       borderRadius: 14,
       opacity: 0.5,
     },
+    debugToggle: {
+      marginTop: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: 'rgba(0,0,0,0.1)',
+      borderRadius: 8,
+      alignSelf: 'center',
+    },
+    debugText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontWeight: '600' as const,
+    },
   }), [colors]);
 
   return (
@@ -743,7 +763,7 @@ export default function HomeScreen() {
                     ]}
                   >
                     <Image
-                      source={require('@/assets/images/building/Beige single-story house.png')}
+                      source={getBuildingImageSource(selectedTab as any, useRemoteAssets)}
                       style={[
                         styles.buildingImage,
                         {
@@ -753,6 +773,9 @@ export default function HomeScreen() {
                                   currentSession?.isActive ? 0.9 : 1,
                         }
                       ]}
+                      onError={(error) => {
+                        console.warn('Failed to load building image:', error.nativeEvent.error);
+                      }}
                     />
                   </Animated.View>
 
@@ -833,6 +856,16 @@ export default function HomeScreen() {
                   <Text style={styles.mainButtonText}>Build</Text>
                 )}
               </View>
+            </TouchableOpacity>
+
+            {/* Debug: Asset source toggle (remove in production) */}
+            <TouchableOpacity
+              style={styles.debugToggle}
+              onPress={() => setUseRemoteAssets(!useRemoteAssets)}
+            >
+              <Text style={styles.debugText}>
+                {useRemoteAssets ? '🌐 Remote' : '📁 Local'}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

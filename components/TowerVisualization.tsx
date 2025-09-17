@@ -1,14 +1,16 @@
 import React from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
-import { Tower } from '@/types';
+import { Tower, TowerType } from '@/types';
+import { getBuildingImageSource } from '@/constants/buildings';
 
 interface TowerVisualizationProps {
   tower: Tower | undefined;
   isActive: boolean;
   progress: number;
+  towerType?: TowerType; // Add towerType to determine which building to show
 }
 
-export default function TowerVisualization({ tower, isActive, progress }: TowerVisualizationProps) {
+export default function TowerVisualization({ tower, isActive, progress, towerType }: TowerVisualizationProps) {
   if (!tower) {
     return (
       <View style={styles.container}>
@@ -24,12 +26,16 @@ export default function TowerVisualization({ tower, isActive, progress }: TowerV
   const scale = Math.min(1 + (tower.level - 1) * 0.05, 2); // Max scale of 2x
   const imageSize = 120 * scale;
 
+  // Determine which building to show - use tower type or fallback to 'personal'
+  const buildingType = towerType || tower.type || 'personal';
+  const buildingImageSource = getBuildingImageSource(buildingType);
+
   return (
     <View style={styles.container}>
       {/* Tower/Building image */}
       <View style={styles.houseContainer}>
         <Image
-          source={require('@/assets/images/building/Beige single-story house.png')}
+          source={buildingImageSource}
           style={[
             styles.houseImage,
             {
@@ -39,6 +45,9 @@ export default function TowerVisualization({ tower, isActive, progress }: TowerV
             }
           ]}
           resizeMode="contain"
+          onError={(error) => {
+            console.warn('Failed to load building image:', error.nativeEvent.error);
+          }}
         />
         
         {/* Construction indicator overlay when active */}
