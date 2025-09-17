@@ -6,7 +6,6 @@ import { View, StatusBar, StyleSheet } from "react-native";
 import { FocusFlowProvider } from "@/store/focusflow-context";
 import { ThemeProvider, useTheme } from "@/store/theme-context";
 import { initAudio } from "@/lib/audio";
-import CustomDrawerContent from "@/components/CustomDrawerContent";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync();
@@ -22,7 +21,6 @@ const styles = StyleSheet.create({
 function RootLayoutNav({ colors }: { colors: any }) {
   return (
     <Drawer
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
         drawerType: "slide",
