@@ -1,9 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Drawer } from "expo-router/drawer";
-import CustomDrawerContent from "@/components/CustomDrawerContent";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { View, StatusBar, StyleSheet } from "react-native";
+import { View, StatusBar, StyleSheet, Platform } from "react-native";
 import { FocusFlowProvider } from "@/store/focusflow-context";
 import { ThemeProvider, useTheme } from "@/store/theme-context";
 import { initAudio } from "@/lib/audio";
@@ -21,88 +20,37 @@ const styles = StyleSheet.create({
 
 function RootLayoutNav({ colors }: { colors: any }) {
   return (
-    <Drawer
-      drawerContent={() => <CustomDrawerContent />}
+    <Stack
       screenOptions={{
         headerShown: false,
-        drawerType: "slide",
-        overlayColor: "transparent",
-        drawerStyle: { 
-          width: 280,
-          backgroundColor: colors.surface,
-        },
-        swipeEnabled: true,
-        drawerPosition: "left",
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
-      <Drawer.Screen 
-        name="(tabs)" 
-        options={{ 
-          title: 'Forest',
-          drawerLabel: 'Forest',
-        }} 
-      />
-      <Drawer.Screen 
-        name="challenge" 
-        options={{ 
-          title: 'Focus Challenge',
-          drawerLabel: 'Focus Challenge',
-        }} 
-      />
-      <Drawer.Screen 
-        name="timeline" 
-        options={{ 
-          title: 'Timeline',
-          drawerLabel: 'Timeline',
-        }} 
-      />
-      <Drawer.Screen 
-        name="tags" 
-        options={{ 
-          title: 'Tags',
-          drawerLabel: 'Tags',
-        }} 
-      />
-      <Drawer.Screen 
-        name="friends" 
-        options={{ 
-          title: 'Friends',
-          drawerLabel: 'Friends',
-        }} 
-      />
-
-      <Drawer.Screen 
-        name="store" 
-        options={{ 
-          title: 'Store',
-          drawerLabel: 'Store',
-        }} 
-      />
-
-      <Drawer.Screen 
-        name="news" 
-        options={{ 
-          title: 'News',
-          drawerLabel: 'News',
-        }} 
-      />
-
-      <Drawer.Screen 
-        name="onboarding" 
-        options={{ 
-          drawerItemStyle: { display: 'none' },
-        }} 
-      />
-
-
-    </Drawer>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="challenge" />
+      <Stack.Screen name="timeline" />
+      <Stack.Screen name="tags" />
+      <Stack.Screen name="friends" />
+      <Stack.Screen name="store" />
+      <Stack.Screen name="news" />
+      <Stack.Screen name="onboarding" />
+    </Stack>
   );
 }
 
 export default function RootLayout() {
   useEffect(() => {
-    SplashScreen.hideAsync();
-    initAudio();
+    const setupApp = async () => {
+      try {
+        await SplashScreen.hideAsync();
+        if (Platform.OS !== 'web') {
+          await initAudio();
+        }
+      } catch (error) {
+        console.warn('Setup error:', error);
+      }
+    };
+    setupApp();
   }, []);
 
   return (
@@ -123,7 +71,9 @@ function ThemedApp() {
   const isDark = colors.background === '#0B0F14' || colors.background === '#0F2336' || colors.background === '#121821';
 
   useEffect(() => {
-    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
+    if (Platform.OS !== 'web') {
+      StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
+    }
   }, [isDark]);
   
   return (

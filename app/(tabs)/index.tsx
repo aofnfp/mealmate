@@ -748,21 +748,51 @@ export default function HomeScreen() {
                       },
                     ]}
                   >
-                    <Image
-                      source={getBuildingImageSource(selectedTab as any)}
-                      style={[
-                        styles.buildingImage,
-                        {
-                          position: 'absolute',
-                          bottom: 0,
-                          opacity: buildingState === 'completed' ? 1 :
-                                  currentSession?.isActive ? 0.9 : 1,
-                        }
-                      ]}
-                      onError={(error) => {
-                        console.warn('Failed to load building image:', error.nativeEvent.error);
-                      }}
-                    />
+                    {(() => {
+                      const imageSource = getBuildingImageSource(selectedTab as any);
+                      const hasValidSource = imageSource && 
+                        (typeof imageSource === 'number' || 
+                         (typeof imageSource === 'object' && imageSource.uri));
+                      
+                      return hasValidSource ? (
+                        <Image
+                          source={imageSource}
+                          style={[
+                            styles.buildingImage,
+                            {
+                              position: 'absolute',
+                              bottom: 0,
+                              opacity: buildingState === 'completed' ? 1 :
+                                      currentSession?.isActive ? 0.9 : 1,
+                            }
+                          ]}
+                          onError={(error) => {
+                            console.warn('Failed to load building image:', error.nativeEvent.error);
+                          }}
+                        />
+                      ) : (
+                        <View style={[
+                          styles.buildingImage,
+                          {
+                            position: 'absolute',
+                            bottom: 0,
+                            backgroundColor: '#E8F4FD',
+                            borderRadius: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 2,
+                            borderColor: '#2E86AB',
+                            opacity: buildingState === 'completed' ? 1 :
+                                    currentSession?.isActive ? 0.9 : 1,
+                          }
+                        ]}>
+                          <Text style={{ fontSize: 48, marginBottom: 8 }}>🏠</Text>
+                          <Text style={{ fontSize: 12, color: '#2E86AB', fontWeight: '600', textTransform: 'capitalize' }}>
+                            {selectedTab}
+                          </Text>
+                        </View>
+                      );
+                    })()}
                   </Animated.View>
 
                   {/* Foundation indicator when building is collapsed */}

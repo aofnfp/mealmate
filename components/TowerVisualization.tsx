@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
 import { Tower, TowerType } from '@/types';
 import { getBuildingImageSource } from '@/constants/buildings';
@@ -11,6 +11,8 @@ interface TowerVisualizationProps {
 }
 
 export default function TowerVisualization({ tower, isActive, progress, towerType }: TowerVisualizationProps) {
+  const [imageError, setImageError] = useState<boolean>(false);
+  
   if (!tower) {
     return (
       <View style={styles.container}>
@@ -29,26 +31,46 @@ export default function TowerVisualization({ tower, isActive, progress, towerTyp
   // Determine which building to show - use tower type or fallback to 'personal'
   const buildingType = towerType || tower.type || 'personal';
   const buildingImageSource = getBuildingImageSource(buildingType);
+  
+  // Validate image source
+  const hasValidImageSource = buildingImageSource && 
+    (typeof buildingImageSource === 'number' || 
+     (typeof buildingImageSource === 'object' && buildingImageSource.uri));
 
   return (
     <View style={styles.container}>
       {/* Tower/Building image */}
       <View style={styles.houseContainer}>
-        <Image
-          source={buildingImageSource}
-          style={[
-            styles.houseImage,
+        {hasValidImageSource && !imageError ? (
+          <Image
+            source={buildingImageSource}
+            style={[
+              styles.houseImage,
+              {
+                width: imageSize,
+                height: imageSize * 1.4,
+                opacity: isActive ? 1 : 0.9,
+              }
+            ]}
+            resizeMode="contain"
+            onError={(error) => {
+              console.warn('Failed to load building image:', error.nativeEvent.error);
+              setImageError(true);
+            }}
+          />
+        ) : (
+          <View style={[
+            styles.fallbackBuilding,
             {
               width: imageSize,
               height: imageSize * 1.4,
               opacity: isActive ? 1 : 0.9,
             }
-          ]}
-          resizeMode="contain"
-          onError={(error) => {
-            console.warn('Failed to load building image:', error.nativeEvent.error);
-          }}
-        />
+          ]}>
+            <Text style={styles.fallbackText}>🏠</Text>
+            <Text style={styles.fallbackLabel}>{buildingType}</Text>
+          </View>
+        )}
         
         {/* Construction indicator overlay when active */}
         {isActive && (
@@ -187,5 +209,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#7F8C8D',
     marginTop: 4,
+  },
+  fallbackBuilding: {
+    backgroundColor: '#E8F4FD',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#2E86AB',
+    marginBottom: 20,
+  },
+  fallbackText: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  fallbackLabel: {
+    fontSize: 12,
+    color: '#2E86AB',
+    fontWeight: '600',
+    textTransform: 'capitalize',
   },
 });
