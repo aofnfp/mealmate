@@ -8,7 +8,6 @@ import {
   ScrollView,
   Modal,
   TextInput,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, Briefcase, Heart, BookOpen, Palette, Users, Sparkles, X, Search, Slash } from 'lucide-react-native';
@@ -16,8 +15,9 @@ import { useTheme } from '@/store/theme-context';
 
 import { useFocusFlow } from '@/store/focusflow-context';
 import { useRouter } from 'expo-router';
-import ProgressRing from '@/components/ProgressRing';
-import { getBuildingImageSource, logAllBuildingUrls } from '@/constants/buildings';
+import TowerVisualization from '@/components/TowerVisualization';
+import { logAllBuildingUrls } from '@/constants/buildings';
+import { TowerType } from '@/types';
 
 const TOWER_TABS = [
   { id: 'career', label: 'Career', icon: Briefcase },
@@ -39,6 +39,7 @@ export default function HomeScreen() {
     tags,
     selectedTagId,
     selectTag,
+    towers,
   } = useFocusFlow();
 
   const [selectedTab] = useState('career');
@@ -48,7 +49,6 @@ export default function HomeScreen() {
 
 
 
-  const buildingScaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const buildingHeightAnim = useRef(new Animated.Value(160)).current; // Full height when complete
   const [showGiveUpModal, setShowGiveUpModal] = useState(false);
@@ -77,7 +77,7 @@ export default function HomeScreen() {
     } else if (currentSession.isActive && buildingState === 'preview') {
       // Just started session, will be set to constructing by handleStartBuilding
     }
-  }, [currentSession?.isActive]);
+  }, [currentSession?.isActive, buildingHeightAnim, buildingState]);
 
   // Animate progress ring
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function HomeScreen() {
         setBuildingState('completed');
       }
     }
-  }, [sessionProgress, currentSession?.isActive, buildingState]);
+  }, [sessionProgress, currentSession?.isActive, buildingState, buildingHeightAnim]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -682,7 +682,7 @@ export default function HomeScreen() {
       opacity: 0.5,
     },
 
-  }), [colors]);
+  }), [colors, space.lg, space.md, space.safeBottom, space.xl]);
 
   return (
     <View style={styles.container}>
@@ -690,7 +690,11 @@ export default function HomeScreen() {
         {/* Clean Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/')}
+            onPress={() => {
+              // Simple navigation to different screens
+              console.log('Menu pressed - navigating to settings');
+              router.push('/(tabs)/settings');
+            }}
             style={styles.menuButton}
             accessibilityLabel="Open menu"
           >
@@ -719,111 +723,38 @@ export default function HomeScreen() {
               : 'Start building today!'}
           </Text>
 
-          {/* Building Visualization */}
+          {/* Building Visualization - Using TowerVisualization component */}
           <View style={styles.buildingContainer}>
-            <View style={styles.buildingCard}>
-              <View style={styles.levelBadge}>
-                <Text style={styles.levelText}>Lv. 1</Text>
+            <TowerVisualization
+              tower={towers?.[selectedTab as TowerType] || {
+                type: selectedTab as TowerType,
+                level: 1,
+                energyInvested: 0,
+                currentGoal: '',
+                progress: sessionProgress * 100,
+              }}
+              isActive={currentSession?.isActive || false}
+              progress={sessionProgress * 100}
+              towerType={selectedTab as TowerType}
+            />
+            
+            <TouchableOpacity 
+              style={[styles.intentionBanner, currentSession?.isActive && styles.intentionBannerDisabled]}
+              onPress={() => !currentSession?.isActive && setShowTagModal(true)}
+              activeOpacity={currentSession?.isActive ? 1 : 0.8}
+              disabled={currentSession?.isActive}
+            >
+              <View style={styles.intentionContent}>
+                {selectedTagId && tags ? (
+                  <View style={[styles.tagDotSmall, { backgroundColor: tags.find(t => t.id === selectedTagId)?.color || colors.primary }]} />
+                ) : (
+                  <View style={[styles.tagDotSmall, { backgroundColor: colors.primary }]} />
+                )}
+                <Text style={styles.intentionText}>
+                  {getSelectedTagName() || `${activeTab?.label} Tower`}
+                </Text>
               </View>
-              
-              <View style={styles.progressRingContainer}>
-                <ProgressRing 
-                  size={260} 
-                  stroke={14} 
-                  progress={sessionProgress}
-                />
-                <Animated.View 
-                  style={[
-                    styles.buildingIconContainer,
-                    { transform: [{ scale: buildingScaleAnim }] }
-                  ]}
-                >
-                  {/* Building Visualization - Single animated building */}
-                  <Animated.View
-                    style={[
-                      styles.buildingAnimationContainer,
-                      {
-                        height: buildingHeightAnim,
-                        overflow: 'hidden',
-                      },
-                    ]}
-                  >
-                    {(() => {
-                      const imageSource = getBuildingImageSource(selectedTab as any);
-                      const hasValidSource = imageSource && 
-                        (typeof imageSource === 'number' || 
-                         (typeof imageSource === 'object' && imageSource.uri));
-                      
-                      return hasValidSource ? (
-                        <Image
-                          source={imageSource}
-                          style={[
-                            styles.buildingImage,
-                            {
-                              position: 'absolute',
-                              bottom: 0,
-                              opacity: buildingState === 'completed' ? 1 :
-                                      currentSession?.isActive ? 0.9 : 1,
-                            }
-                          ]}
-                          onError={(error) => {
-                            console.warn('Failed to load building image:', error.nativeEvent.error);
-                          }}
-                        />
-                      ) : (
-                        <View style={[
-                          styles.buildingImage,
-                          {
-                            position: 'absolute',
-                            bottom: 0,
-                            backgroundColor: '#E8F4FD',
-                            borderRadius: 12,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderWidth: 2,
-                            borderColor: '#2E86AB',
-                            opacity: buildingState === 'completed' ? 1 :
-                                    currentSession?.isActive ? 0.9 : 1,
-                          }
-                        ]}>
-                          <Text style={{ fontSize: 48, marginBottom: 8 }}>🏠</Text>
-                          <Text style={{ fontSize: 12, color: '#2E86AB', fontWeight: '600', textTransform: 'capitalize' }}>
-                            {selectedTab}
-                          </Text>
-                        </View>
-                      );
-                    })()}
-                  </Animated.View>
-
-                  {/* Foundation indicator when building is collapsed */}
-                  {buildingState === 'foundation' && (
-                    <View style={styles.foundationIndicator}>
-                      <View style={styles.foundationBase} />
-                    </View>
-                  )}
-                </Animated.View>
-              </View>
-
-              <TouchableOpacity 
-                style={[styles.intentionBanner, currentSession?.isActive && styles.intentionBannerDisabled]}
-                onPress={() => !currentSession?.isActive && setShowTagModal(true)}
-                activeOpacity={currentSession?.isActive ? 1 : 0.8}
-                disabled={currentSession?.isActive}
-              >
-                <View style={styles.intentionContent}>
-                  {selectedTagId && tags ? (
-                    <View style={[styles.tagDotSmall, { backgroundColor: tags.find(t => t.id === selectedTagId)?.color || colors.primary }]} />
-                  ) : (
-                    <View style={[styles.tagDotSmall, { backgroundColor: colors.primary }]} />
-                  )}
-                  <Text style={styles.intentionText}>
-                    {getSelectedTagName() || `${activeTab?.label} Tower`}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-
-
+            </TouchableOpacity>
           </View>
 
           {/* Timer Display */}
@@ -839,7 +770,11 @@ export default function HomeScreen() {
                     styles.durationPill,
                     selectedDuration === duration && styles.durationPillActive
                   ]}
-                  onPress={() => setSelectedDuration(duration)}
+                  onPress={() => {
+                    if (duration && typeof duration === 'number' && duration > 0 && duration <= 180) {
+                      setSelectedDuration(duration);
+                    }
+                  }}
                 >
                   <Text style={[
                     styles.durationText,
