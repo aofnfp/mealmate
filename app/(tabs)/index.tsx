@@ -748,46 +748,21 @@ export default function HomeScreen() {
                       },
                     ]}
                   >
-                    {(() => {
-                      const imageSource = getBuildingImageSource(selectedTab as any);
-                      if (!imageSource) {
-                        console.warn('No image source found for tab:', selectedTab);
-                        return (
-                          <View style={[
-                            styles.buildingImage,
-                            {
-                              position: 'absolute',
-                              bottom: 0,
-                              backgroundColor: colors.outline,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }
-                          ]}>
-                            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Building</Text>
-                          </View>
-                        );
-                      }
-                      return (
-                        <Image
-                          source={imageSource}
-                          style={[
-                            styles.buildingImage,
-                            {
-                              position: 'absolute',
-                              bottom: 0,
-                              opacity: buildingState === 'completed' ? 1 :
-                                      currentSession?.isActive ? 0.9 : 1,
-                            }
-                          ]}
-                          onError={(error) => {
-                            console.warn('Failed to load building image for tab:', selectedTab, error.nativeEvent?.error);
-                          }}
-                          onLoad={() => {
-                            console.log('Successfully loaded building image for tab:', selectedTab);
-                          }}
-                        />
-                      );
-                    })()}
+                    <Image
+                      source={getBuildingImageSource(selectedTab as any)}
+                      style={[
+                        styles.buildingImage,
+                        {
+                          position: 'absolute',
+                          bottom: 0,
+                          opacity: buildingState === 'completed' ? 1 :
+                                  currentSession?.isActive ? 0.9 : 1,
+                        }
+                      ]}
+                      onError={(error) => {
+                        console.warn('Failed to load building image:', error.nativeEvent.error);
+                      }}
+                    />
                   </Animated.View>
 
                   {/* Foundation indicator when building is collapsed */}

@@ -29,19 +29,6 @@ export default function TowerVisualization({ tower, isActive, progress, towerTyp
   // Determine which building to show - use tower type or fallback to 'personal'
   const buildingType = towerType || tower.type || 'personal';
   const buildingImageSource = getBuildingImageSource(buildingType);
-  
-  // Validate image source
-  if (!buildingImageSource) {
-    console.warn('No valid building image source found for type:', buildingType);
-    return (
-      <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Building not available</Text>
-          <Text style={styles.emptySubtext}>Please check your assets</Text>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -59,10 +46,7 @@ export default function TowerVisualization({ tower, isActive, progress, towerTyp
           ]}
           resizeMode="contain"
           onError={(error) => {
-            console.warn('Failed to load building image for type:', buildingType, error.nativeEvent?.error);
-          }}
-          onLoad={() => {
-            console.log('Successfully loaded building image for type:', buildingType);
+            console.warn('Failed to load building image:', error.nativeEvent.error);
           }}
         />
         

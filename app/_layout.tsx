@@ -3,19 +3,11 @@ import { Drawer } from "expo-router/drawer";
 import CustomDrawerContent from "@/components/CustomDrawerContent";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { View, StatusBar, StyleSheet, Platform } from "react-native";
+import { View, StatusBar, StyleSheet } from "react-native";
 import { FocusFlowProvider } from "@/store/focusflow-context";
 import { ThemeProvider, useTheme } from "@/store/theme-context";
 import { initAudio } from "@/lib/audio";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-// Prevent duplicate screen registration on web
-if (Platform.OS === 'web') {
-  // Clear any existing screen registrations
-  if ((global as any).__EXPO_ROUTER_SCREENS) {
-    (global as any).__EXPO_ROUTER_SCREENS = new Set();
-  }
-}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -109,17 +101,8 @@ function RootLayoutNav({ colors }: { colors: any }) {
 
 export default function RootLayout() {
   useEffect(() => {
-    const setupApp = async () => {
-      try {
-        await SplashScreen.hideAsync();
-        if (Platform.OS !== 'web') {
-          await initAudio();
-        }
-      } catch (error) {
-        console.warn('Setup error:', error);
-      }
-    };
-    setupApp();
+    SplashScreen.hideAsync();
+    initAudio();
   }, []);
 
   return (
