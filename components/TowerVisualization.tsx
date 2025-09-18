@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, Image, TouchableOpacity, Animated } from 'react-native';
 import { Tower, TowerType } from '@/types';
 import { getBuildingImageSource } from '@/constants/buildings';
 import HouseSelectionModal from '@/components/HouseSelectionModal';
@@ -10,9 +10,11 @@ interface TowerVisualizationProps {
   isActive: boolean;
   progress: number;
   towerType?: TowerType;
+  buildingState?: 'preview' | 'foundation' | 'constructing' | 'completed';
+  buildingHeightAnim?: Animated.Value;
 }
 
-export default function TowerVisualization({ tower, isActive, progress, towerType }: TowerVisualizationProps) {
+export default function TowerVisualization({ tower, isActive, progress, towerType, buildingState = 'preview', buildingHeightAnim }: TowerVisualizationProps) {
   const [imageError, setImageError] = useState<boolean>(false);
   const [showHouseModal, setShowHouseModal] = useState<boolean>(false);
   const { selectedBuildingType, setSelectedBuildingType } = useFocusFlow();
@@ -58,46 +60,90 @@ export default function TowerVisualization({ tower, isActive, progress, towerTyp
         activeOpacity={0.8}
       >
         {hasValidImageSource && !imageError ? (
-          <Image
-            source={buildingImageSource}
-            style={[
-              styles.houseImage,
+          buildingHeightAnim ? (
+            <Animated.View style={[styles.animatedContainer, { height: buildingHeightAnim }]}>
+              <Image
+                source={buildingImageSource}
+                style={[
+                  styles.houseImage,
+                  {
+                    width: imageSize,
+                    height: imageSize * 1.4,
+                    opacity: isActive ? 1 : 0.9,
+                  }
+                ]}
+                resizeMode="contain"
+                onError={(error) => {
+                  console.warn('Failed to load building image:', error.nativeEvent.error);
+                  setImageError(true);
+                }}
+              />
+            </Animated.View>
+          ) : (
+            <Image
+              source={buildingImageSource}
+              style={[
+                styles.houseImage,
+                {
+                  width: imageSize,
+                  height: imageSize * 1.4,
+                  opacity: isActive ? 1 : 0.9,
+                }
+              ]}
+              resizeMode="contain"
+              onError={(error) => {
+                console.warn('Failed to load building image:', error.nativeEvent.error);
+                setImageError(true);
+              }}
+            />
+          )
+        ) : (
+          buildingHeightAnim ? (
+            <Animated.View style={[styles.animatedContainer, { height: buildingHeightAnim }]}>
+              <View style={[
+                styles.fallbackBuilding,
+                {
+                  width: imageSize,
+                  height: imageSize * 1.4,
+                  opacity: isActive ? 1 : 0.9,
+                }
+              ]}>
+                <Text style={styles.fallbackText}>🏠</Text>
+                <Text style={styles.fallbackLabel}>{buildingType}</Text>
+              </View>
+            </Animated.View>
+          ) : (
+            <View style={[
+              styles.fallbackBuilding,
               {
                 width: imageSize,
                 height: imageSize * 1.4,
                 opacity: isActive ? 1 : 0.9,
               }
-            ]}
-            resizeMode="contain"
-            onError={(error) => {
-              console.warn('Failed to load building image:', error.nativeEvent.error);
-              setImageError(true);
-            }}
-          />
-        ) : (
-          <View style={[
-            styles.fallbackBuilding,
-            {
-              width: imageSize,
-              height: imageSize * 1.4,
-              opacity: isActive ? 1 : 0.9,
-            }
-          ]}>
-            <Text style={styles.fallbackText}>🏠</Text>
-            <Text style={styles.fallbackLabel}>{buildingType}</Text>
-          </View>
+            ]}>
+              <Text style={styles.fallbackText}>🏠</Text>
+              <Text style={styles.fallbackLabel}>{buildingType}</Text>
+            </View>
+          )
         )}
 
       </TouchableOpacity>
+      
+      {/* Foundation indicator when in foundation state */}
+      {buildingState === 'foundation' && (
+        <View style={styles.foundationIndicator}>
+          <View style={styles.foundationBase} />
+        </View>
+      )}
         
-        {/* Construction indicator overlay when active */}
-        {isActive && (
-          <View style={styles.constructionOverlay}>
-            <View style={styles.constructionDot} />
-            <View style={[styles.constructionDot, styles.constructionDot2]} />
-            <View style={[styles.constructionDot, styles.constructionDot3]} />
-          </View>
-        )}
+      {/* Construction indicator overlay when active */}
+      {isActive && buildingState === 'constructing' && (
+        <View style={styles.constructionOverlay}>
+          <View style={styles.constructionDot} />
+          <View style={[styles.constructionDot, styles.constructionDot2]} />
+          <View style={[styles.constructionDot, styles.constructionDot3]} />
+        </View>
+      )}
         
         {/* Progress indicator */}
         {isActive && progress > 0 && (
@@ -253,6 +299,25 @@ const styles = StyleSheet.create({
     color: '#2E86AB',
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  foundationIndicator: {
+    position: 'absolute',
+    bottom: -20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  foundationBase: {
+    width: 100,
+    height: 8,
+    backgroundColor: '#8B7355',
+    borderRadius: 4,
+    opacity: 0.8,
+  },
+  animatedContainer: {
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
   },
 
 });

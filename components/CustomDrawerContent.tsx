@@ -38,7 +38,11 @@ const ITEMS: DrawerItem[] = [
   { label: "Settings", icon: (color) => <Settings size={18} color={color} strokeWidth={1.5} />, route: "(tabs)", tabName: "settings" },
 ];
 
-export default function CustomDrawerContent() {
+interface CustomDrawerContentProps {
+  onNavigate?: () => void;
+}
+
+export default function CustomDrawerContent({ onNavigate }: CustomDrawerContentProps) {
   const { colors } = useTheme();
   const pathname = usePathname();
 
@@ -77,6 +81,8 @@ export default function CustomDrawerContent() {
                   } else {
                     router.push(`/${item.route}`);
                   }
+                  // Close the modal after navigation
+                  onNavigate?.();
                 }}
                 activeOpacity={0.8}
                 style={[

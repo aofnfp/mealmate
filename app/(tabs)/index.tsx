@@ -16,6 +16,7 @@ import { useTheme } from '@/store/theme-context';
 import { useFocusFlow } from '@/store/focusflow-context';
 import { useRouter } from 'expo-router';
 import TowerVisualization from '@/components/TowerVisualization';
+import CustomDrawerContent from '@/components/CustomDrawerContent';
 import { logAllBuildingUrls } from '@/constants/buildings';
 import { TowerType } from '@/types';
 
@@ -46,6 +47,7 @@ export default function HomeScreen() {
   const [selectedDuration, setSelectedDuration] = useState(25); // minutes
   const [showTagModal, setShowTagModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNavigationModal, setShowNavigationModal] = useState(false);
 
 
 
@@ -681,6 +683,30 @@ export default function HomeScreen() {
       borderRadius: 14,
       opacity: 0.5,
     },
+    navigationModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-start',
+    },
+    navigationModalContent: {
+      backgroundColor: colors.surface,
+      height: '100%',
+      width: '85%',
+      maxWidth: 320,
+    },
+    navigationHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.outline,
+    },
+    navigationTitle: {
+      fontSize: 18,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+    },
 
   }), [colors, space.lg, space.md, space.safeBottom, space.xl]);
 
@@ -691,9 +717,8 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
-              // Simple navigation to different screens
-              console.log('Menu pressed - navigating to settings');
-              router.push('/(tabs)/settings');
+              console.log('Menu pressed - opening navigation modal');
+              setShowNavigationModal(true);
             }}
             style={styles.menuButton}
             accessibilityLabel="Open menu"
@@ -736,6 +761,8 @@ export default function HomeScreen() {
               isActive={currentSession?.isActive || false}
               progress={sessionProgress * 100}
               towerType={selectedTab as TowerType}
+              buildingState={buildingState}
+              buildingHeightAnim={buildingHeightAnim}
             />
             
             <TouchableOpacity 
@@ -936,6 +963,26 @@ export default function HomeScreen() {
                 <Text style={styles.giveUpConfirmText}>Give Up</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Navigation Modal */}
+      <Modal
+        visible={showNavigationModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowNavigationModal(false)}
+      >
+        <View style={styles.navigationModalOverlay}>
+          <View style={styles.navigationModalContent}>
+            <View style={styles.navigationHeader}>
+              <Text style={styles.navigationTitle}>Navigation</Text>
+              <TouchableOpacity onPress={() => setShowNavigationModal(false)}>
+                <X size={24} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+            <CustomDrawerContent onNavigate={() => setShowNavigationModal(false)} />
           </View>
         </View>
       </Modal>
