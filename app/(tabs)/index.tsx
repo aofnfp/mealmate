@@ -45,7 +45,7 @@ export default function HomeScreen() {
   const [selectedDuration, setSelectedDuration] = useState(25); // minutes
   const [showTagModal, setShowTagModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [useRemoteAssets, setUseRemoteAssets] = useState(false); // Toggle for testing
+
 
 
   const buildingScaleAnim = useRef(new Animated.Value(1)).current;
@@ -681,19 +681,7 @@ export default function HomeScreen() {
       borderRadius: 14,
       opacity: 0.5,
     },
-    debugToggle: {
-      marginTop: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      backgroundColor: 'rgba(0,0,0,0.1)',
-      borderRadius: 8,
-      alignSelf: 'center',
-    },
-    debugText: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      fontWeight: '600' as const,
-    },
+
   }), [colors]);
 
   return (
@@ -761,7 +749,7 @@ export default function HomeScreen() {
                     ]}
                   >
                     <Image
-                      source={getBuildingImageSource(selectedTab as any, useRemoteAssets)}
+                      source={getBuildingImageSource(selectedTab as any)}
                       style={[
                         styles.buildingImage,
                         {
@@ -856,15 +844,7 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Debug: Asset source toggle (remove in production) */}
-            <TouchableOpacity
-              style={styles.debugToggle}
-              onPress={() => setUseRemoteAssets(!useRemoteAssets)}
-            >
-              <Text style={styles.debugText}>
-                {useRemoteAssets ? '🌐 Remote' : '📁 Local'}
-              </Text>
-            </TouchableOpacity>
+
           </View>
         </ScrollView>
       </SafeAreaView>
