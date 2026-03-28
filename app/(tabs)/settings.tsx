@@ -1,431 +1,182 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, Switch, ScrollView, TouchableOpacity, Alert, Modal } from "react-native";
-
-import { useFocusFlow } from "@/store/focusflow-context";
-import { useTheme } from "@/store/theme-context";
-import { storage } from "@/lib/storage";
-import { ChevronRight } from "lucide-react-native";
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Trash2 } from 'lucide-react-native';
+import { useTheme } from '@/store/theme-context';
+import { useTimerStore } from '@/store/timer-store';
+import { storage } from '@/lib/storage';
 
 export default function SettingsScreen() {
-  const { settings, updateSettings, reloadData } = useFocusFlow();
-  const { currentTheme, themes, applyTheme, previewTheme, colors: themeColors } = useTheme();
-  const [constructionSounds, setConstructionSounds] = useState(settings?.constructionSounds ?? true);
-  const [celebrationEffects, setCelebrationEffects] = useState(settings?.celebrationEffects ?? true);
-  const [volume, setVolume] = useState(settings?.volume ?? 70);
+  const { colors, themes, currentTheme, applyTheme } = useTheme();
+  const { config, setConfig } = useTimerStore();
 
-  const [sessionReminders, setSessionReminders] = useState(settings?.sessionReminders ?? true);
-  const [streakNotifications, setStreakNotifications] = useState(settings?.streakNotifications ?? true);
-  const [impactUpdates, setImpactUpdates] = useState(settings?.impactUpdates ?? true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const [autoBreaks, setAutoBreaks] = useState(config.autoStartBreaks);
+  const [autoWork, setAutoWork] = useState(config.autoStartWork);
 
-  const [weatherEffects, setWeatherEffects] = useState(settings?.weatherEffects ?? true);
-  const [showThemePicker, setShowThemePicker] = useState(false);
-  const [previewThemeId, setPreviewThemeId] = useState<string | null>(null);
+  const handleAutoBreaks = useCallback((val: boolean) => {
+    setAutoBreaks(val);
+    setConfig({ autoStartBreaks: val });
+  }, [setConfig]);
+
+  const handleAutoWork = useCallback((val: boolean) => {
+    setAutoWork(val);
+    setConfig({ autoStartWork: val });
+  }, [setConfig]);
+
+  const handleClearData = useCallback(() => {
+    Alert.alert(
+      'Clear All Data',
+      'This will reset all your progress, sessions, and settings. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            await storage.clearAll();
+            await useTimerStore.getState().loadFromStorage();
+            Alert.alert('Done', 'All data has been cleared.');
+          },
+        },
+      ]
+    );
+  }, []);
+
+  const workMin = Math.round(config.workDuration / 60);
+  const shortMin = Math.round(config.shortBreakDuration / 60);
+  const longMin = Math.round(config.longBreakDuration / 60);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    scroll: { paddingHorizontal: 20, paddingBottom: 40 },
+    title: { fontSize: 28, fontWeight: '700', color: colors.textPrimary, marginTop: 16, marginBottom: 24 },
+    section: {
+      backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 16,
+      marginBottom: 20, borderWidth: 1, borderColor: colors.outline,
+    },
+    sectionTitle: {
+      fontSize: 12, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase',
+      color: colors.textSecondary, marginBottom: 12, marginTop: 20, marginLeft: 4,
+    },
+    row: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.outline,
+    },
+    rowLast: { borderBottomWidth: 0 },
+    rowLabel: { fontSize: 15, fontWeight: '500', color: colors.textPrimary },
+    pills: { flexDirection: 'row', gap: 8 },
+    pill: {
+      paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16,
+      borderWidth: 1.5, borderColor: colors.outline,
+    },
+    pillActive: { borderColor: colors.primary, backgroundColor: `${colors.primary}10` },
+    pillText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    pillTextActive: { color: colors.primary },
+    themeRow: {
+      flexDirection: 'row', alignItems: 'center', gap: 10,
+      paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.outline,
+    },
+    themeRowLast: { borderBottomWidth: 0 },
+    themeDot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: 'transparent' },
+    themeDotActive: { borderColor: colors.textPrimary },
+    themeName: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.textPrimary },
+    themeCheck: { fontSize: 14, color: colors.primary, fontWeight: '700' },
+    dangerBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+      paddingVertical: 14, borderRadius: 12, backgroundColor: `${colors.danger}10`, marginVertical: 12,
+    },
+    dangerText: { fontSize: 14, fontWeight: '600', color: colors.danger },
+    version: { textAlign: 'center', fontSize: 12, color: colors.textSecondary, marginTop: 24 },
+  }), [colors]);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: themeColors.background }]} contentContainerStyle={{ paddingBottom: 24 }}>
-      <Text style={[styles.title, { color: themeColors.textPrimary }]}>Settings</Text>
+    <View style={styles.container}>
+      <SafeAreaView edges={['top']}>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <Text style={styles.title}>Settings</Text>
 
-      {/* Timer Settings */}
-      <View style={[styles.section, { backgroundColor: themeColors.surface, borderColor: themeColors.outline }]}>
-        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Timer Settings</Text>
-        <Row
-          label="Construction Sounds"
-          right={
-            <Switch 
-              value={constructionSounds} 
-              onValueChange={(value) => {
-                setConstructionSounds(value);
-                updateSettings({ constructionSounds: value });
-              }} 
-            />
-          }
-        />
-        <Row
-          label="Celebration Effects"
-          right={
-            <Switch 
-              value={celebrationEffects} 
-              onValueChange={(value) => {
-                setCelebrationEffects(value);
-                updateSettings({ celebrationEffects: value });
-              }} 
-            />
-          }
-        />
-        <View style={styles.sliderRow}>
-          <Text style={[styles.rowLabel, { color: themeColors.textPrimary }]}>Volume: {volume}%</Text>
-        </View>
-      </View>
-
-      {/* Notifications */}
-      <View style={[styles.section, { backgroundColor: themeColors.surface, borderColor: themeColors.outline }]}>
-        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Notifications</Text>
-        <Row 
-          label="Session Reminders" 
-          right={
-            <Switch 
-              value={sessionReminders} 
-              onValueChange={(value) => {
-                setSessionReminders(value);
-                updateSettings({ sessionReminders: value });
-              }} 
-            />
-          } 
-        />
-        <Row 
-          label="Streak Notifications" 
-          right={
-            <Switch 
-              value={streakNotifications} 
-              onValueChange={(value) => {
-                setStreakNotifications(value);
-                updateSettings({ streakNotifications: value });
-              }} 
-            />
-          } 
-        />
-        <Row 
-          label="Impact Updates" 
-          right={
-            <Switch 
-              value={impactUpdates} 
-              onValueChange={(value) => {
-                setImpactUpdates(value);
-                updateSettings({ impactUpdates: value });
-              }} 
-            />
-          } 
-        />
-      </View>
-
-      {/* City Customization */}
-      <View style={[styles.section, { backgroundColor: themeColors.surface, borderColor: themeColors.outline }]}>
-        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>City Customization</Text>
-        <Row label="Building Style" right={<Text style={[styles.valuePill, { backgroundColor: `${themeColors.primary}22`, color: themeColors.primary }]}>Modern</Text>} />
-        <Row 
-          label="Weather Effects" 
-          right={
-            <Switch 
-              value={weatherEffects} 
-              onValueChange={(value) => {
-                setWeatherEffects(value);
-                updateSettings({ weatherEffects: value });
-              }} 
-            />
-          } 
-        />
-      </View>
-
-      {/* Theme / Privacy / About */}
-      <View style={[styles.section, { backgroundColor: themeColors.surface, borderColor: themeColors.outline }]}>
-        <TouchableOpacity onPress={() => setShowThemePicker(true)}>
-          <Row 
-            label="Theme" 
-            right={
-              <View style={styles.themeRow}>
-                <Text style={[styles.valuePill, { backgroundColor: `${themeColors.primary}22`, color: themeColors.primary }]}>{currentTheme.name}</Text>
-                <ChevronRight size={16} color={themeColors.textSecondary} />
+          <Text style={styles.sectionTitle}>Timer</Text>
+          <View style={styles.section}>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Work</Text>
+              <View style={styles.pills}>
+                {[15, 25, 45, 50].map(m => (
+                  <TouchableOpacity key={m} style={[styles.pill, workMin === m && styles.pillActive]} onPress={() => setConfig({ workDuration: m * 60 })}>
+                    <Text style={[styles.pillText, workMin === m && styles.pillTextActive]}>{m}m</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            } 
-          />
-        </TouchableOpacity>
-        <Row label="Privacy" right={<Text style={[styles.valuePill, { backgroundColor: `${themeColors.primary}22`, color: themeColors.primary }]}>Standard</Text>} />
-        <Row label="About & Version" right={<Text style={[styles.valuePill, { backgroundColor: `${themeColors.primary}22`, color: themeColors.primary }]}>v0.1.0</Text>} />
-      </View>
-
-      {/* Debug Section */}
-      <View style={[styles.section, { backgroundColor: themeColors.surface, borderColor: themeColors.outline }]}>
-        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Debug & Reset</Text>
-        <TouchableOpacity 
-          style={[styles.debugButton, { backgroundColor: themeColors.secondary }]}
-          onPress={async () => {
-            Alert.alert(
-              'Fix JSON Parse Error',
-              'This will scan and remove any corrupted data from storage. Continue?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Fix',
-                  onPress: async () => {
-                    try {
-                      console.log('Starting storage fix...');
-                      const result = await storage.validateAndFixStorage();
-                      
-                      if (result.errors.length > 0) {
-                        console.log('Storage errors found:', result.errors);
-                      }
-                      
-                      // Reload data
-                      await reloadData();
-                      
-                      Alert.alert(
-                        'Success', 
-                        result.fixed 
-                          ? `Fixed ${result.errors.length} corrupted entries. App should work now.`
-                          : 'No corrupted data found. Storage is clean.'
-                      );
-                    } catch (error) {
-                      console.error('Debug error:', error);
-                      Alert.alert('Error', 'Failed to fix storage: ' + (error as Error).message);
-                    }
-                  },
-                },
-              ]
-            );
-          }}
-        >
-          <Text style={[styles.debugButtonText, { color: themeColors.onSecondary }]}>Fix JSON Parse Error</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.debugButton, styles.debugButtonDanger, { backgroundColor: themeColors.danger }]}
-          onPress={() => {
-            Alert.alert(
-              'Clear All Data',
-              'This will reset all your progress, achievements, and settings. Are you sure?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Clear',
-                  style: 'destructive',
-                  onPress: async () => {
-                    await storage.clearAll();
-                    await reloadData();
-                    Alert.alert('Success', 'All data has been cleared');
-                  },
-                },
-              ]
-            );
-          }}
-        >
-          <Text style={[styles.debugButtonText, { color: '#FFFFFF' }]}>Clear All Data</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Theme Picker Modal */}
-      <Modal
-        visible={showThemePicker}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => {
-          setShowThemePicker(false);
-          if (previewThemeId) {
-            applyTheme(currentTheme.id);
-            setPreviewThemeId(null);
-          }
-        }}
-      >
-        <View style={[styles.modalContainer, { backgroundColor: themeColors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>Choose Theme</Text>
-            <TouchableOpacity 
-              onPress={() => {
-                setShowThemePicker(false);
-                if (previewThemeId) {
-                  applyTheme(currentTheme.id);
-                  setPreviewThemeId(null);
-                }
-              }}
-            >
-              <Text style={[styles.modalClose, { color: themeColors.textSecondary }]}>Cancel</Text>
-            </TouchableOpacity>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Short Break</Text>
+              <View style={styles.pills}>
+                {[3, 5, 10].map(m => (
+                  <TouchableOpacity key={m} style={[styles.pill, shortMin === m && styles.pillActive]} onPress={() => setConfig({ shortBreakDuration: m * 60 })}>
+                    <Text style={[styles.pillText, shortMin === m && styles.pillTextActive]}>{m}m</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            <View style={[styles.row, styles.rowLast]}>
+              <Text style={styles.rowLabel}>Long Break</Text>
+              <View style={styles.pills}>
+                {[15, 20, 30].map(m => (
+                  <TouchableOpacity key={m} style={[styles.pill, longMin === m && styles.pillActive]} onPress={() => setConfig({ longBreakDuration: m * 60 })}>
+                    <Text style={[styles.pillText, longMin === m && styles.pillTextActive]}>{m}m</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
           </View>
-          
-          <ScrollView style={styles.themeList}>
-            {themes.map((theme) => (
+
+          <Text style={styles.sectionTitle}>Behavior</Text>
+          <View style={styles.section}>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Auto-start breaks</Text>
+              <Switch value={autoBreaks} onValueChange={handleAutoBreaks} />
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Auto-start work</Text>
+              <Switch value={autoWork} onValueChange={handleAutoWork} />
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Sound</Text>
+              <Switch value={soundEnabled} onValueChange={setSoundEnabled} />
+            </View>
+            <View style={[styles.row, styles.rowLast]}>
+              <Text style={styles.rowLabel}>Haptics</Text>
+              <Switch value={hapticsEnabled} onValueChange={setHapticsEnabled} />
+            </View>
+          </View>
+
+          <Text style={styles.sectionTitle}>Theme</Text>
+          <View style={styles.section}>
+            {themes.map((theme, i) => (
               <TouchableOpacity
                 key={theme.id}
-                style={[
-                  styles.themeItem,
-                  { 
-                    backgroundColor: themeColors.surface,
-                    borderColor: theme.id === (previewThemeId || currentTheme.id) ? themeColors.primary : themeColors.outline,
-                    borderWidth: theme.id === (previewThemeId || currentTheme.id) ? 2 : 1,
-                  }
-                ]}
-                onPress={() => {
-                  setPreviewThemeId(theme.id);
-                  previewTheme(theme.id);
-                }}
+                style={[styles.themeRow, i === themes.length - 1 && styles.themeRowLast]}
+                onPress={() => applyTheme(theme.id)}
               >
-                <View style={styles.themePreview}>
-                  <View style={[styles.colorSwatch, { backgroundColor: theme.colors.primary }]} />
-                  <View style={[styles.colorSwatch, { backgroundColor: theme.colors.secondary }]} />
-                  <View style={[styles.colorSwatch, { backgroundColor: theme.colors.accent }]} />
-                  <View style={[styles.colorSwatch, { backgroundColor: theme.colors.background }]} />
-                </View>
-                <Text style={[styles.themeName, { color: themeColors.textPrimary }]}>{theme.name}</Text>
-                {theme.id === (previewThemeId || currentTheme.id) && (
-                  <View style={[styles.selectedBadge, { backgroundColor: themeColors.primary }]}>
-                    <Text style={[styles.selectedText, { color: themeColors.onPrimary }]}>✓</Text>
-                  </View>
-                )}
+                <View style={[styles.themeDot, { backgroundColor: theme.colors.primary }, currentTheme.id === theme.id && styles.themeDotActive]} />
+                <Text style={styles.themeName}>{theme.name}</Text>
+                {currentTheme.id === theme.id && <Text style={styles.themeCheck}>Active</Text>}
               </TouchableOpacity>
             ))}
-          </ScrollView>
-          
-          <View style={[styles.modalFooter, { backgroundColor: themeColors.surface, borderTopColor: themeColors.outline }]}>
-            <TouchableOpacity
-              style={[styles.applyButton, { backgroundColor: themeColors.primary }]}
-              onPress={() => {
-                if (previewThemeId) {
-                  applyTheme(previewThemeId);
-                }
-                setShowThemePicker(false);
-                setPreviewThemeId(null);
-              }}
-            >
-              <Text style={[styles.applyButtonText, { color: themeColors.onPrimary }]}>Apply Theme</Text>
+          </View>
+
+          <Text style={styles.sectionTitle}>Data</Text>
+          <View style={styles.section}>
+            <TouchableOpacity style={styles.dangerBtn} onPress={handleClearData}>
+              <Trash2 size={16} color={colors.danger} />
+              <Text style={styles.dangerText}>Clear All Data</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
-  );
-}
 
-interface RowProps {
-  label: string;
-  right: React.ReactNode;
-}
-
-function Row({ label, right }: RowProps) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.row}>
-      <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>{label}</Text>
-      {right}
+          <Text style={styles.version}>FocusFlow v1.0.0</Text>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-  },
-  modalClose: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-  },
-  themeList: {
-    flex: 1,
-    padding: 16,
-  },
-  themeItem: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  themePreview: {
-    flexDirection: 'row',
-    gap: 8,
-    marginRight: 16,
-  },
-  colorSwatch: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  themeName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600' as const,
-  },
-  selectedBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  selectedText: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-  },
-  modalFooter: {
-    padding: 16,
-    borderTopWidth: 1,
-  },
-  themeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  applyButton: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-  },
-  container: { 
-    flex: 1, 
-    padding: 16 
-  },
-  title: { 
-    fontSize: 22, 
-    fontWeight: "800" as const, 
-    marginBottom: 8 
-  },
-  section: {
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-  },
-  sectionTitle: { 
-    fontWeight: "800" as const, 
-    marginBottom: 8 
-  },
-  row: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    paddingVertical: 10 
-  },
-  rowLabel: { 
-    fontSize: 14, 
-    fontWeight: "600" as const 
-  },
-  sliderRow: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    gap: 12, 
-    paddingVertical: 12 
-  },
-  valuePill: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    fontWeight: "700" as const,
-  },
-  debugButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  debugButtonDanger: {
-    marginTop: 12,
-  },
-  debugButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-  },
-});
