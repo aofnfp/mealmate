@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Play, Pause, RotateCcw, SkipForward, Tag } from 'lucide-react-native';
+import { Play, Pause, RotateCcw, SkipForward, Tag, X, Plus, Check } from 'lucide-react-native';
 import { useTheme } from '@/store/theme-context';
 import { useTimerStore } from '@/store/timer-store';
 import { DEFAULT_PRESETS, SessionPhase } from '@/types';
@@ -33,9 +33,11 @@ export default function TimerScreen() {
   const { colors } = useTheme();
   const {
     timer, config, tags, isLoaded,
-    startWork, startBreak, pause, resume, reset, skip, setActiveTag, tick,
+    startWork, startBreak, pause, resume, reset, skip, setActiveTag, addTag, tick,
   } = useTimerStore();
 
+  const [tagModalVisible, setTagModalVisible] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -88,6 +90,22 @@ export default function TimerScreen() {
   const handleReset = useCallback(() => reset(), [reset]);
   const handleSkip = useCallback(() => skip(), [skip]);
 
+  const handleSelectTag = useCallback((tagId: string | null) => {
+    setActiveTag(tagId);
+    setTagModalVisible(false);
+  }, [setActiveTag]);
+
+  const handleAddTag = useCallback(async () => {
+    const name = newTagName.trim();
+    if (!name) return;
+    const tag = await addTag(name);
+    if (tag) {
+      setActiveTag(tag.id);
+      setNewTagName('');
+      setTagModalVisible(false);
+    }
+  }, [newTagName, addTag, setActiveTag]);
+
   const activeTag = tags.find(t => t.id === timer.activeTagId);
   const accent = phaseColor(timer.phase, colors.primary);
 
@@ -106,8 +124,6 @@ export default function TimerScreen() {
   // Ring dimensions
   const RING_SIZE = 280;
   const STROKE = 8;
-  const RADIUS = (RING_SIZE - STROKE) / 2;
-  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -149,6 +165,33 @@ export default function TimerScreen() {
     },
     tagDot: { width: 10, height: 10, borderRadius: 5 },
     tagText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    // Modal styles
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+    modalContent: {
+      backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+      paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40, maxHeight: '60%',
+    },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+    modalTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
+    tagOption: {
+      flexDirection: 'row', alignItems: 'center', paddingVertical: 14,
+      borderBottomWidth: 1, borderBottomColor: colors.outline,
+    },
+    tagOptionDot: { width: 12, height: 12, borderRadius: 6, marginRight: 14 },
+    tagOptionName: { flex: 1, fontSize: 15, fontWeight: '500', color: colors.textPrimary },
+    tagOptionCheck: { width: 24 },
+    noTagOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.outline },
+    noTagText: { flex: 1, fontSize: 15, fontWeight: '500', color: colors.textSecondary },
+    addTagRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
+    addTagInput: {
+      flex: 1, height: 42, borderRadius: 12, backgroundColor: colors.background,
+      paddingHorizontal: 14, fontSize: 14, color: colors.textPrimary,
+      borderWidth: 1, borderColor: colors.outline,
+    },
+    addTagBtn: {
+      width: 42, height: 42, borderRadius: 12, backgroundColor: colors.primary,
+      alignItems: 'center', justifyContent: 'center',
+    },
   }), [colors, accent, RING_SIZE, STROKE]);
 
   if (!isLoaded) return <View style={styles.container} />;
@@ -234,12 +277,66 @@ export default function TimerScreen() {
         </View>
 
         {/* Tag chip */}
-        <TouchableOpacity style={styles.tagChip}>
+        <TouchableOpacity style={styles.tagChip} onPress={() => setTagModalVisible(true)}>
           <View style={[styles.tagDot, { backgroundColor: activeTag?.color || colors.textSecondary }]} />
           <Text style={styles.tagText}>{activeTag?.name || 'No tag'}</Text>
           <Tag size={14} color={colors.textSecondary} />
         </TouchableOpacity>
       </SafeAreaView>
+
+      {/* Tag Selector Modal */}
+      <Modal visible={tagModalVisible} transparent animationType="slide" onRequestClose={() => setTagModalVisible(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setTagModalVisible(false)}>
+          <TouchableOpacity style={styles.modalContent} activeOpacity={1} onPress={() => {}}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Tag</Text>
+              <TouchableOpacity onPress={() => setTagModalVisible(false)}>
+                <X size={22} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* No tag option */}
+            <TouchableOpacity style={styles.noTagOption} onPress={() => handleSelectTag(null)}>
+              <View style={[styles.tagOptionDot, { backgroundColor: colors.textSecondary, opacity: 0.3 }]} />
+              <Text style={styles.noTagText}>No tag</Text>
+              {!timer.activeTagId && (
+                <View style={styles.tagOptionCheck}>
+                  <Check size={18} color={colors.primary} />
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Tag list */}
+            {tags.map(tag => (
+              <TouchableOpacity key={tag.id} style={styles.tagOption} onPress={() => handleSelectTag(tag.id)}>
+                <View style={[styles.tagOptionDot, { backgroundColor: tag.color }]} />
+                <Text style={styles.tagOptionName}>{tag.name}</Text>
+                {timer.activeTagId === tag.id && (
+                  <View style={styles.tagOptionCheck}>
+                    <Check size={18} color={colors.primary} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+
+            {/* Add new tag */}
+            <View style={styles.addTagRow}>
+              <TextInput
+                style={styles.addTagInput}
+                placeholder="New tag name..."
+                placeholderTextColor={colors.textSecondary}
+                value={newTagName}
+                onChangeText={setNewTagName}
+                onSubmitEditing={handleAddTag}
+                returnKeyType="done"
+              />
+              <TouchableOpacity style={styles.addTagBtn} onPress={handleAddTag}>
+                <Plus size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
