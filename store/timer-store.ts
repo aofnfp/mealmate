@@ -12,6 +12,8 @@ import {
 } from '@/types';
 import { storage } from '@/lib/storage';
 import { playCompletionSound } from '@/lib/audio';
+import { showInterstitial } from '@/lib/ads';
+import { usePremiumStore } from '@/store/premium-store';
 
 interface TimerStore {
   // Config
@@ -336,6 +338,12 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       playCompletionSound();
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+
+      // Show interstitial ad between sessions (free users only)
+      if (timer.phase === 'work' && !usePremiumStore.getState().isPremium) {
+        // Small delay so completion sound plays first
+        setTimeout(() => showInterstitial(), 800);
       }
 
       // Auto-start next phase or go idle

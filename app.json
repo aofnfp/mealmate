@@ -18,7 +18,11 @@
       "bundleIdentifier": "com.aofnfp.focusflow",
       "infoPlist": {
         "UIBackgroundModes": ["audio"],
-        "NSMicrophoneUsageDescription": "Allow FocusFlow to access your microphone for audio features"
+        "NSMicrophoneUsageDescription": "Allow FocusFlow to access your microphone for audio features",
+        "SKAdNetworkItems": [
+          { "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork" }
+        ],
+        "NSUserTrackingUsageDescription": "This helps us show relevant ads and support the free version of FocusFlow."
       }
     },
     "android": {
@@ -27,7 +31,10 @@
         "backgroundColor": "#F5F6F8"
       },
       "package": "com.aofnfp.focusflow",
-      "permissions": ["android.permission.VIBRATE"]
+      "permissions": [
+        "android.permission.VIBRATE",
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -35,7 +42,14 @@
     "plugins": [
       ["expo-router", { "origin": "https://focusflow.app/" }],
       ["expo-av", { "microphonePermission": "Allow FocusFlow to access your microphone" }],
-      ["expo-notifications"]
+      ["expo-notifications"],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY",
+          "iosAppId": "ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

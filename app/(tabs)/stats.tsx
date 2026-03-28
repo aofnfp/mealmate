@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Flame, Clock, Target, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '@/store/theme-context';
 import { useTimerStore } from '@/store/timer-store';
+import AdBanner from '@/components/AdBanner';
 
 function formatHours(ms: number): string {
   const hours = Math.floor(ms / 3600000);
@@ -107,7 +108,7 @@ export default function StatsScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']}>
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.title}>Stats</Text>
 
@@ -174,6 +175,8 @@ export default function StatsScreen() {
             <Text style={styles.empty}>Complete your first focus session to see stats</Text>
           )}
         </ScrollView>
+
+        <AdBanner />
       </SafeAreaView>
     </View>
   );

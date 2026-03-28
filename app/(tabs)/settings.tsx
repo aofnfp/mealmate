@@ -1,19 +1,24 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Trash2 } from 'lucide-react-native';
+import { Trash2, Crown } from 'lucide-react-native';
 import { useTheme } from '@/store/theme-context';
 import { useTimerStore } from '@/store/timer-store';
 import { storage } from '@/lib/storage';
+import { usePremiumStore } from '@/store/premium-store';
+import AdBanner from '@/components/AdBanner';
+import Paywall from '@/components/Paywall';
 
 export default function SettingsScreen() {
   const { colors, themes, currentTheme, applyTheme } = useTheme();
   const { config, setConfig } = useTimerStore();
+  const { isPremium, restore } = usePremiumStore();
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [autoBreaks, setAutoBreaks] = useState(config.autoStartBreaks);
   const [autoWork, setAutoWork] = useState(config.autoStartWork);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const handleAutoBreaks = useCallback((val: boolean) => {
     setAutoBreaks(val);
@@ -24,6 +29,15 @@ export default function SettingsScreen() {
     setAutoWork(val);
     setConfig({ autoStartWork: val });
   }, [setConfig]);
+
+  const handleRestore = useCallback(async () => {
+    const success = await restore();
+    if (success) {
+      Alert.alert('Restored!', 'Your premium access has been restored.');
+    } else {
+      Alert.alert('No Purchases Found', 'We could not find any previous purchases.');
+    }
+  }, [restore]);
 
   const handleClearData = useCallback(() => {
     Alert.alert(
@@ -83,6 +97,22 @@ export default function SettingsScreen() {
     themeDotActive: { borderColor: colors.textPrimary },
     themeName: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.textPrimary },
     themeCheck: { fontSize: 14, color: colors.primary, fontWeight: '700' },
+    premiumBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+      paddingVertical: 16, borderRadius: 16, marginBottom: 20,
+      backgroundColor: colors.primary,
+    },
+    premiumBtnText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+    premiumActiveCard: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+      paddingVertical: 16, borderRadius: 16, marginBottom: 20,
+      backgroundColor: `${colors.accent}15`, borderWidth: 1, borderColor: colors.accent,
+    },
+    premiumActiveText: { fontSize: 15, fontWeight: '600', color: colors.accent },
+    restoreRow: {
+      flexDirection: 'row', justifyContent: 'center', marginBottom: 16,
+    },
+    restoreText: { fontSize: 13, fontWeight: '500', color: colors.textSecondary, textDecorationLine: 'underline' },
     dangerBtn: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
       paddingVertical: 14, borderRadius: 12, backgroundColor: `${colors.danger}10`, marginVertical: 12,
@@ -93,9 +123,29 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']}>
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.title}>Settings</Text>
+
+          {/* Premium section */}
+          {isPremium ? (
+            <View style={styles.premiumActiveCard}>
+              <Crown size={20} color={colors.accent} />
+              <Text style={styles.premiumActiveText}>Premium Active</Text>
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.premiumBtn} onPress={() => setPaywallVisible(true)} activeOpacity={0.8}>
+                <Crown size={20} color="#FFFFFF" />
+                <Text style={styles.premiumBtnText}>Upgrade to Premium</Text>
+              </TouchableOpacity>
+              <View style={styles.restoreRow}>
+                <TouchableOpacity onPress={handleRestore}>
+                  <Text style={styles.restoreText}>Restore purchases</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
 
           <Text style={styles.sectionTitle}>Timer</Text>
           <View style={styles.section}>
@@ -176,7 +226,11 @@ export default function SettingsScreen() {
 
           <Text style={styles.version}>FocusFlow v1.0.0</Text>
         </ScrollView>
+
+        <AdBanner />
       </SafeAreaView>
+
+      <Paywall visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
     </View>
   );
 }

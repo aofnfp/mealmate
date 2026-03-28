@@ -6,6 +6,9 @@ import { View, StatusBar, StyleSheet, Platform } from 'react-native';
 import { ThemeProvider, useTheme } from '@/store/theme-context';
 import { initAudio } from '@/lib/audio';
 import { useTimerStore } from '@/store/timer-store';
+import { initPurchases } from '@/lib/purchases';
+import { preloadInterstitial } from '@/lib/ads';
+import { usePremiumStore } from '@/store/premium-store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,6 +37,14 @@ export default function RootLayout() {
         if (Platform.OS !== 'web') {
           await initAudio();
           await requestNotificationPermission();
+          // Initialize monetization
+          await initPurchases();
+          await usePremiumStore.getState().loadStatus();
+          usePremiumStore.getState().startListening();
+          // Preload interstitial for between-session ads
+          if (!usePremiumStore.getState().isPremium) {
+            preloadInterstitial();
+          }
         }
         await useTimerStore.getState().loadFromStorage();
       } catch (e) {

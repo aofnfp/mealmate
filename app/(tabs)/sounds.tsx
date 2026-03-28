@@ -1,10 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CloudRain, Trees, Waves, Coffee, Radio, Volume2, VolumeX } from 'lucide-react-native';
+import { CloudRain, Trees, Waves, Coffee, Radio, Volume2, VolumeX, Lock } from 'lucide-react-native';
 import { useTheme } from '@/store/theme-context';
 import { AMBIENT_SOUNDS, SoundId } from '@/types';
 import { playAmbientSound, stopAmbientSound, getPlayingAmbientId } from '@/lib/audio';
+import { usePremiumStore } from '@/store/premium-store';
+import AdBanner from '@/components/AdBanner';
+import Paywall from '@/components/Paywall';
 
 const SOUND_ICONS: Record<SoundId, React.ComponentType<any>> = {
   rain: CloudRain,
@@ -16,10 +19,18 @@ const SOUND_ICONS: Record<SoundId, React.ComponentType<any>> = {
 
 export default function SoundsScreen() {
   const { colors } = useTheme();
+  const isPremium = usePremiumStore((s) => s.isPremium);
   const [playingId, setPlayingId] = useState<SoundId | null>(getPlayingAmbientId());
   const [volume] = useState(0.5);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
-  const handleToggle = async (soundId: SoundId) => {
+  const handleToggle = useCallback(async (soundId: SoundId) => {
+    const sound = AMBIENT_SOUNDS.find(s => s.id === soundId);
+    if (sound?.premium && !isPremium) {
+      setPaywallVisible(true);
+      return;
+    }
+
     if (playingId === soundId) {
       await stopAmbientSound();
       setPlayingId(null);
@@ -27,12 +38,12 @@ export default function SoundsScreen() {
       await playAmbientSound(soundId, volume);
       setPlayingId(soundId);
     }
-  };
+  }, [playingId, volume, isPremium]);
 
-  const handleStopAll = async () => {
+  const handleStopAll = useCallback(async () => {
     await stopAmbientSound();
     setPlayingId(null);
-  };
+  }, []);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -45,7 +56,7 @@ export default function SoundsScreen() {
       borderRadius: 16, padding: 18, borderWidth: 1.5, borderColor: colors.outline,
     },
     cardPlaying: { borderColor: colors.primary, backgroundColor: `${colors.primary}08` },
-    cardLocked: { opacity: 0.5 },
+    cardLocked: { opacity: 0.6 },
     iconWrap: {
       width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
       backgroundColor: colors.background, marginRight: 16,
@@ -74,7 +85,7 @@ export default function SoundsScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']}>
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.title}>Sounds</Text>
           <Text style={styles.subtitle}>Ambient sounds for focus</Text>
@@ -90,10 +101,11 @@ export default function SoundsScreen() {
             {AMBIENT_SOUNDS.map(sound => {
               const Icon = SOUND_ICONS[sound.id];
               const isPlaying = playingId === sound.id;
+              const isLocked = sound.premium && !isPremium;
               return (
                 <TouchableOpacity
                   key={sound.id}
-                  style={[styles.card, isPlaying && styles.cardPlaying]}
+                  style={[styles.card, isPlaying && styles.cardPlaying, isLocked && styles.cardLocked]}
                   onPress={() => handleToggle(sound.id)}
                   activeOpacity={0.7}
                 >
@@ -101,6 +113,7 @@ export default function SoundsScreen() {
                     <Icon size={22} color={isPlaying ? colors.primary : colors.textSecondary} />
                   </View>
                   <Text style={styles.soundName}>{sound.name}</Text>
+                  {isLocked && <Lock size={14} color={colors.textSecondary} style={{ marginRight: 8 }} />}
                   {sound.premium && <Text style={styles.premiumBadge}>PRO</Text>}
                   {isPlaying && <View style={styles.playingDot} />}
                 </TouchableOpacity>
@@ -115,7 +128,11 @@ export default function SoundsScreen() {
             </TouchableOpacity>
           )}
         </ScrollView>
+
+        <AdBanner />
       </SafeAreaView>
+
+      <Paywall visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
     </View>
   );
 }
