@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +26,8 @@ export default function RecipeDetailScreen() {
   const router = useRouter();
   const { favorites, toggleFavorite } = useMealStore();
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
+  const [cookingMode, setCookingMode] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const recipe = useMemo(() => getRecipeById(id), [id]);
 
@@ -155,8 +159,82 @@ export default function RecipeDetailScreen() {
           ))}
         </View>
 
+        {/* Start Cooking Button */}
+        <View style={styles.cookingButtonWrap}>
+          <TouchableOpacity
+            style={styles.cookingButton}
+            onPress={() => { setCurrentStep(0); setCookingMode(true); }}
+          >
+            <Ionicons name="flame" size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.cookingButtonText}>Start Cooking</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Cooking Mode Modal */}
+      <Modal visible={cookingMode} animationType="slide" presentationStyle="fullScreen">
+        <SafeAreaView style={styles.cookingContainer}>
+          <View style={styles.cookingHeader}>
+            <TouchableOpacity onPress={() => setCookingMode(false)} style={styles.cookingClose}>
+              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.cookingTitle} numberOfLines={1}>{recipe.name}</Text>
+            <View style={{ width: 40 }} />
+          </View>
+
+          <View style={styles.cookingBody}>
+            <Text style={styles.cookingStepLabel}>
+              STEP {currentStep + 1} OF {recipe.instructions.length}
+            </Text>
+            <Text style={styles.cookingStepText}>{recipe.instructions[currentStep]}</Text>
+          </View>
+
+          {/* Progress dots */}
+          <View style={styles.cookingDots}>
+            {recipe.instructions.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.cookingDot,
+                  i === currentStep && styles.cookingDotActive,
+                  i < currentStep && styles.cookingDotDone,
+                ]}
+              />
+            ))}
+          </View>
+
+          <View style={styles.cookingNav}>
+            <TouchableOpacity
+              style={[styles.cookingNavBtn, currentStep === 0 && styles.cookingNavBtnDisabled]}
+              onPress={() => setCurrentStep((s) => Math.max(0, s - 1))}
+              disabled={currentStep === 0}
+            >
+              <Ionicons name="chevron-back" size={20} color={currentStep === 0 ? Colors.textTertiary : Colors.textPrimary} />
+              <Text style={[styles.cookingNavBtnText, currentStep === 0 && { color: Colors.textTertiary }]}>Previous</Text>
+            </TouchableOpacity>
+
+            {currentStep < recipe.instructions.length - 1 ? (
+              <TouchableOpacity
+                style={[styles.cookingNavBtn, styles.cookingNavBtnPrimary]}
+                onPress={() => setCurrentStep((s) => s + 1)}
+              >
+                <Text style={styles.cookingNavBtnPrimaryText}>Next</Text>
+                <Ionicons name="chevron-forward" size={20} color="#fff" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.cookingNavBtn, styles.cookingNavBtnPrimary]}
+                onPress={() => setCookingMode(false)}
+              >
+                <Ionicons name="checkmark" size={20} color="#fff" />
+                <Text style={styles.cookingNavBtnPrimaryText}>Done</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -230,4 +308,54 @@ const styles = StyleSheet.create({
   },
   stepNumber: { fontFamily: 'DM Sans', fontSize: 13, fontWeight: '700', color: Colors.accent },
   instructionText: { flex: 1, fontFamily: 'DM Sans', fontSize: 15, lineHeight: 22, color: Colors.textPrimary },
+  // Cooking Button
+  cookingButtonWrap: { paddingHorizontal: 20, marginTop: 4 },
+  cookingButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.accent, borderRadius: 14, paddingVertical: 16,
+  },
+  cookingButtonText: { fontFamily: 'DM Sans', fontSize: 16, fontWeight: '700', color: '#fff' },
+  // Cooking Mode
+  cookingContainer: { flex: 1, backgroundColor: Colors.background },
+  cookingHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 12,
+  },
+  cookingClose: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.border,
+  },
+  cookingTitle: {
+    flex: 1, fontFamily: 'DM Sans', fontSize: 16, fontWeight: '600',
+    color: Colors.textPrimary, textAlign: 'center', marginHorizontal: 8,
+  },
+  cookingBody: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
+  cookingStepLabel: {
+    fontFamily: 'DM Sans', fontSize: 12, fontWeight: '700', letterSpacing: 1,
+    color: Colors.accent, marginBottom: 16, textAlign: 'center',
+  },
+  cookingStepText: {
+    fontFamily: 'DM Serif Display', fontSize: 26, lineHeight: 36,
+    color: Colors.textPrimary, textAlign: 'center',
+  },
+  cookingDots: {
+    flexDirection: 'row', justifyContent: 'center', gap: 6, paddingVertical: 20,
+  },
+  cookingDot: {
+    width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.border,
+  },
+  cookingDotActive: { backgroundColor: Colors.accent, width: 20 },
+  cookingDotDone: { backgroundColor: Colors.success },
+  cookingNav: {
+    flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 20, gap: 12,
+  },
+  cookingNavBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 16, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: Colors.surface, gap: 6,
+  },
+  cookingNavBtnDisabled: { opacity: 0.4 },
+  cookingNavBtnText: { fontFamily: 'DM Sans', fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
+  cookingNavBtnPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  cookingNavBtnPrimaryText: { fontFamily: 'DM Sans', fontSize: 15, fontWeight: '700', color: '#fff' },
 });

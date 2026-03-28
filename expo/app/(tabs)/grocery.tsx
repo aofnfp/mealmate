@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  TextInput,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
@@ -41,7 +43,9 @@ const CATEGORY_LABELS: Partial<Record<IngredientCategory, string>> = {
 };
 
 export default function GroceryScreen() {
-  const { groceryItems, toggleGroceryItem, clearCheckedGrocery } = useMealStore();
+  const { groceryItems, toggleGroceryItem, clearCheckedGrocery, addManualGroceryItem } = useMealStore();
+  const [showAddInput, setShowAddInput] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
 
   const checkedCount = groceryItems.filter((i) => i.isChecked).length;
   const totalCount = groceryItems.length;
@@ -59,12 +63,41 @@ export default function GroceryScreen() {
     items.sort((a, b) => Number(a.isChecked) - Number(b.isChecked));
   });
 
+  const handleAddItem = () => {
+    const name = newItemName.trim();
+    if (!name) return;
+    addManualGroceryItem(name, 0, '');
+    setNewItemName('');
+    setShowAddInput(false);
+    Keyboard.dismiss();
+  };
+
   if (totalCount === 0) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Grocery List</Text>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddInput(true)}>
+            <Ionicons name="add" size={20} color={Colors.accent} />
+          </TouchableOpacity>
         </View>
+        {showAddInput && (
+          <View style={styles.addInputRow}>
+            <TextInput
+              style={styles.addInput}
+              placeholder="Add an item..."
+              placeholderTextColor={Colors.textTertiary}
+              value={newItemName}
+              onChangeText={setNewItemName}
+              onSubmitEditing={handleAddItem}
+              autoFocus
+              returnKeyType="done"
+            />
+            <TouchableOpacity style={styles.addSubmit} onPress={handleAddItem}>
+              <Ionicons name="checkmark" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No items yet</Text>
           <Text style={styles.emptySubtitle}>Generate a meal plan to auto-create your grocery list.</Text>
@@ -80,12 +113,34 @@ export default function GroceryScreen() {
           <Text style={styles.title}>Grocery List</Text>
           <Text style={styles.subtitle}>{totalCount} items from this week's plan</Text>
         </View>
-        {checkedCount > 0 && (
-          <TouchableOpacity style={styles.clearButton} onPress={clearCheckedGrocery}>
-            <Text style={styles.clearButtonText}>Clear ({checkedCount})</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddInput(!showAddInput)}>
+            <Ionicons name={showAddInput ? 'close' : 'add'} size={20} color={Colors.accent} />
           </TouchableOpacity>
-        )}
+          {checkedCount > 0 && (
+            <TouchableOpacity style={styles.clearButton} onPress={clearCheckedGrocery}>
+              <Text style={styles.clearButtonText}>Clear ({checkedCount})</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
+      {showAddInput && (
+        <View style={styles.addInputRow}>
+          <TextInput
+            style={styles.addInput}
+            placeholder="Add an item..."
+            placeholderTextColor={Colors.textTertiary}
+            value={newItemName}
+            onChangeText={setNewItemName}
+            onSubmitEditing={handleAddItem}
+            autoFocus
+            returnKeyType="done"
+          />
+          <TouchableOpacity style={styles.addSubmit} onPress={handleAddItem}>
+            <Ionicons name="checkmark" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.list}>
         {Object.entries(grouped).map(([category, items]) => {
@@ -141,11 +196,29 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: 'DM Serif Display', fontSize: 28, letterSpacing: -0.56, color: Colors.textPrimary },
   subtitle: { fontFamily: 'DM Sans', fontSize: 13, color: Colors.textTertiary, marginTop: 2 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  addButton: {
+    width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
+  },
   clearButton: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
-    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, marginTop: 4,
+    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
   clearButtonText: { fontFamily: 'DM Sans', fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  addInputRow: {
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20,
+    marginBottom: 12, gap: 10,
+  },
+  addInput: {
+    flex: 1, height: 44, borderRadius: 12, backgroundColor: Colors.surface,
+    borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 14,
+    fontFamily: 'DM Sans', fontSize: 15, color: Colors.textPrimary,
+  },
+  addSubmit: {
+    width: 44, height: 44, borderRadius: 12, backgroundColor: Colors.accent,
+    alignItems: 'center', justifyContent: 'center',
+  },
   list: { flex: 1 },
   // Category groups
   categoryGroup: { marginBottom: 20 },
