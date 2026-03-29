@@ -77,7 +77,7 @@ export default function PlanScreen() {
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No meal plan yet</Text>
           <Text style={styles.emptySubtitle}>Generate your first weekly plan to get started.</Text>
-          <TouchableOpacity style={styles.generateButton} onPress={generateNewPlan}>
+          <TouchableOpacity style={styles.generateButton} onPress={generateNewPlan} accessibilityLabel="Generate meal plan" accessibilityRole="button">
             <Text style={styles.generateButtonText}>Generate Plan</Text>
           </TouchableOpacity>
         </View>
@@ -95,10 +95,10 @@ export default function PlanScreen() {
             <Text style={styles.headerTitle}>Today</Text>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconButton} onPress={generateNewPlan}>
+            <TouchableOpacity style={styles.iconButton} onPress={generateNewPlan} accessibilityLabel="Refresh meal plan" accessibilityRole="button" accessibilityHint="Generate a new weekly plan">
               <Ionicons name="refresh-outline" size={22} color={Colors.textPrimary} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton} accessibilityLabel="View favorite meals" accessibilityRole="button">
               <Ionicons name="star" size={22} color={Colors.accent} />
             </TouchableOpacity>
           </View>
@@ -111,6 +111,9 @@ export default function PlanScreen() {
               key={name}
               style={[styles.dayItem, selectedDay === i && styles.dayItemActive]}
               onPress={() => setSelectedDay(i)}
+              accessibilityLabel={`${name}, ${dayDates[i]}`}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selectedDay === i }}
             >
               <Text style={[styles.dayName, selectedDay === i && styles.dayNameActive]}>{name}</Text>
               <Text style={[styles.dayDate, selectedDay === i && styles.dayDateActive]}>{dayDates[i]}</Text>
@@ -129,6 +132,9 @@ export default function PlanScreen() {
                 style={styles.mealCard}
                 onPress={() => router.push(`/recipe/${recipe.id}`)}
                 activeOpacity={0.7}
+                accessibilityLabel={`${mealMeta.label}: ${recipe.name}`}
+                accessibilityRole="button"
+                accessibilityHint="View recipe details"
               >
                 <View style={styles.mealCardThumb}>
                   <Text style={styles.mealCardEmoji}>
@@ -149,6 +155,9 @@ export default function PlanScreen() {
                     setSwapTarget({ dayOfWeek: meal.dayOfWeek, mealType: meal.mealType, recipeId: recipe.id });
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityLabel={`Swap ${mealMeta.label.toLowerCase()}`}
+                  accessibilityRole="button"
+                  accessibilityHint="Replace this meal with an alternative"
                 >
                   <Ionicons name="swap-horizontal-outline" size={18} color={Colors.textTertiary} />
                 </TouchableOpacity>

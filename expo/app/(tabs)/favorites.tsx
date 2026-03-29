@@ -40,7 +40,7 @@ export default function FavoritesScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Favorites</Text>
-        <TouchableOpacity>
+        <TouchableOpacity accessibilityLabel="Sort recipes" accessibilityRole="button">
           <Text style={styles.sortButton}>Sort by</Text>
         </TouchableOpacity>
       </View>
@@ -53,6 +53,9 @@ export default function FavoritesScreen() {
               style={styles.card}
               onPress={() => router.push(`/recipe/${recipe.id}`)}
               activeOpacity={0.7}
+              accessibilityLabel={recipe.name}
+              accessibilityRole="button"
+              accessibilityHint="View recipe details"
             >
               <View style={styles.cardImage}>
                 <Text style={styles.cardEmoji}>

@@ -53,7 +53,7 @@ export default function SettingsScreen() {
         <Text style={styles.title}>Settings</Text>
 
         {/* Premium CTA */}
-        <TouchableOpacity style={styles.premiumCard}>
+        <TouchableOpacity style={styles.premiumCard} accessibilityLabel="Go Premium: AI plans, pantry tracking, no ads" accessibilityRole="button">
           <View style={styles.premiumContent}>
             <Text style={styles.premiumTitle}>Go Premium</Text>
             <Text style={styles.premiumSubtitle}>AI plans, pantry tracking, no ads. $4.99/mo</Text>
@@ -85,7 +85,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Delete */}
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAll}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAll} accessibilityLabel="Delete all data" accessibilityRole="button" accessibilityHint="Permanently removes all meal plans, grocery lists, and preferences">
           <Text style={styles.deleteButtonText}>Delete All Data</Text>
         </TouchableOpacity>
 
@@ -97,7 +97,7 @@ export default function SettingsScreen() {
 
 function SettingRow({ label, value, isLast, onPress }: { label: string; value?: string; isLast?: boolean; onPress?: () => void }) {
   return (
-    <TouchableOpacity style={[styles.settingRow, !isLast && styles.settingRowBorder]} onPress={onPress}>
+    <TouchableOpacity style={[styles.settingRow, !isLast && styles.settingRowBorder]} onPress={onPress} accessibilityLabel={value ? `${label}: ${value}` : label} accessibilityRole="button">
       <Text style={styles.settingLabel}>{label}</Text>
       <View style={styles.settingRight}>
         {value && <Text style={styles.settingValue}>{value}</Text>}

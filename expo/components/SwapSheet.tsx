@@ -62,8 +62,8 @@ export default function SwapSheet({ visible, onClose, dayOfWeek, mealType, curre
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+      <Pressable style={styles.overlay} onPress={handleClose} accessibilityLabel="Close meal swap" accessibilityRole="button">
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()} accessibilityRole="none">
           {/* Handle */}
           <View style={styles.handle} />
 
@@ -81,6 +81,9 @@ export default function SwapSheet({ visible, onClose, dayOfWeek, mealType, curre
                   style={[styles.option, isSelected && styles.optionSelected]}
                   onPress={() => setSelectedId(recipe.id)}
                   activeOpacity={0.7}
+                  accessibilityLabel={recipe.name}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
                 >
                   <View style={styles.optionThumb}>
                     <Text style={styles.optionEmoji}>
@@ -105,6 +108,9 @@ export default function SwapSheet({ visible, onClose, dayOfWeek, mealType, curre
             style={[styles.swapButton, !selectedId && styles.swapButtonDisabled]}
             onPress={handleSwap}
             disabled={!selectedId}
+            accessibilityLabel="Swap meal"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !selectedId }}
           >
             <Text style={styles.swapButtonText}>Swap Meal</Text>
           </TouchableOpacity>

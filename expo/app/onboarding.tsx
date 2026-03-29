@@ -77,7 +77,7 @@ export default function OnboardingScreen() {
             Personalized weekly plans, auto-generated grocery lists, and recipes
             you'll love — all in 30 seconds.
           </Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => setStep(1)}>
+          <TouchableOpacity style={styles.primaryButton} onPress={() => setStep(1)} accessibilityLabel="Get started" accessibilityRole="button">
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </TouchableOpacity>
           <Text style={styles.fineprint}>
@@ -91,7 +91,7 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setStep(Math.max(0, step - 1))}>
+        <TouchableOpacity onPress={() => setStep(Math.max(0, step - 1))} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.progressBar}>
@@ -102,7 +102,7 @@ export default function OnboardingScreen() {
             />
           ))}
         </View>
-        <TouchableOpacity onPress={handleSkip}>
+        <TouchableOpacity onPress={handleSkip} accessibilityLabel="Skip onboarding" accessibilityRole="button">
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
       </View>
@@ -123,6 +123,9 @@ export default function OnboardingScreen() {
                   dietType === opt.type && styles.dietOptionSelected,
                 ]}
                 onPress={() => setDietType(opt.type)}
+                accessibilityLabel={`${opt.label}: ${opt.desc}`}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: dietType === opt.type }}
               >
                 <View style={styles.dietOptionLeft}>
                   <Text style={styles.dietOptionLabel}>{opt.label}</Text>
@@ -140,7 +143,7 @@ export default function OnboardingScreen() {
             ))}
           </View>
           <View style={styles.bottomAction}>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => setStep(2)}>
+            <TouchableOpacity style={styles.primaryButton} onPress={() => setStep(2)} accessibilityLabel="Continue to allergies" accessibilityRole="button">
               <Text style={styles.primaryButtonText}>Continue</Text>
             </TouchableOpacity>
           </View>
@@ -162,6 +165,9 @@ export default function OnboardingScreen() {
                   key={opt.type}
                   style={[styles.chip, isSelected && styles.chipSelected]}
                   onPress={() => toggleAllergy(opt.type)}
+                  accessibilityLabel={opt.label}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: isSelected }}
                 >
                   {isSelected && (
                     <Ionicons name="checkmark" size={14} color="#fff" style={{ marginRight: 4 }} />
@@ -177,12 +183,14 @@ export default function OnboardingScreen() {
             MealMate provides nutritional information for reference only. Always check ingredient labels.
           </Text>
           <View style={styles.bottomAction}>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => setStep(3)}>
+            <TouchableOpacity style={styles.primaryButton} onPress={() => setStep(3)} accessibilityLabel="Continue to calorie goals" accessibilityRole="button">
               <Text style={styles.primaryButtonText}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.secondaryAction}
               onPress={() => { setAllergies([]); setStep(3); }}
+              accessibilityLabel="No allergies, continue"
+              accessibilityRole="button"
             >
               <Text style={styles.secondaryActionText}>No allergies</Text>
             </TouchableOpacity>
@@ -210,6 +218,9 @@ export default function OnboardingScreen() {
                   calorieTarget === cal && styles.presetChipSelected,
                 ]}
                 onPress={() => setCalorieTarget(cal)}
+                accessibilityLabel={`${cal.toLocaleString()} calories per day`}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: calorieTarget === cal }}
               >
                 <Text
                   style={[
@@ -221,17 +232,19 @@ export default function OnboardingScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.presetChip} onPress={() => setCalorieTarget(2000)}>
+            <TouchableOpacity style={styles.presetChip} onPress={() => setCalorieTarget(2000)} accessibilityLabel="Set custom calorie target" accessibilityRole="button">
               <Text style={styles.presetChipText}>Custom</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.bottomAction}>
-            <TouchableOpacity style={styles.primaryButton} onPress={handleFinish}>
+            <TouchableOpacity style={styles.primaryButton} onPress={handleFinish} accessibilityLabel="Generate my meal plan" accessibilityRole="button">
               <Text style={styles.primaryButtonText}>Generate My Plan</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.secondaryAction}
               onPress={() => { setCalorieTarget(null); handleFinish(); }}
+              accessibilityLabel="Skip calorie target and generate plan"
+              accessibilityRole="button"
             >
               <Text style={styles.secondaryActionText}>Skip — no calorie target</Text>
             </TouchableOpacity>

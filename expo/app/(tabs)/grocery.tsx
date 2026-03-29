@@ -77,7 +77,7 @@ export default function GroceryScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Grocery List</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddInput(true)}>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddInput(true)} accessibilityLabel="Add item" accessibilityRole="button">
             <Ionicons name="add" size={20} color={Colors.accent} />
           </TouchableOpacity>
         </View>
@@ -92,8 +92,10 @@ export default function GroceryScreen() {
               onSubmitEditing={handleAddItem}
               autoFocus
               returnKeyType="done"
+              accessibilityLabel="Item name"
+              accessibilityHint="Enter a grocery item to add"
             />
-            <TouchableOpacity style={styles.addSubmit} onPress={handleAddItem}>
+            <TouchableOpacity style={styles.addSubmit} onPress={handleAddItem} accessibilityLabel="Confirm add item" accessibilityRole="button">
               <Ionicons name="checkmark" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -114,11 +116,11 @@ export default function GroceryScreen() {
           <Text style={styles.subtitle}>{totalCount} items from this week's plan</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddInput(!showAddInput)}>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddInput(!showAddInput)} accessibilityLabel={showAddInput ? 'Close add item' : 'Add item'} accessibilityRole="button">
             <Ionicons name={showAddInput ? 'close' : 'add'} size={20} color={Colors.accent} />
           </TouchableOpacity>
           {checkedCount > 0 && (
-            <TouchableOpacity style={styles.clearButton} onPress={clearCheckedGrocery}>
+            <TouchableOpacity style={styles.clearButton} onPress={clearCheckedGrocery} accessibilityLabel={`Clear ${checkedCount} checked items`} accessibilityRole="button">
               <Text style={styles.clearButtonText}>Clear ({checkedCount})</Text>
             </TouchableOpacity>
           )}
@@ -135,8 +137,10 @@ export default function GroceryScreen() {
             onSubmitEditing={handleAddItem}
             autoFocus
             returnKeyType="done"
+            accessibilityLabel="Item name"
+            accessibilityHint="Enter a grocery item to add"
           />
-          <TouchableOpacity style={styles.addSubmit} onPress={handleAddItem}>
+          <TouchableOpacity style={styles.addSubmit} onPress={handleAddItem} accessibilityLabel="Confirm add item" accessibilityRole="button">
             <Ionicons name="checkmark" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -158,6 +162,9 @@ export default function GroceryScreen() {
                   style={styles.groceryItem}
                   onPress={() => toggleGroceryItem(item.id)}
                   activeOpacity={0.7}
+                  accessibilityLabel={item.ingredientName}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: item.isChecked }}
                 >
                   <View style={[styles.checkbox, item.isChecked && styles.checkboxChecked]}>
                     {item.isChecked && <Ionicons name="checkmark" size={14} color="#fff" />}

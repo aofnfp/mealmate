@@ -55,11 +55,11 @@ export default function RecipeDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header with back + favorite */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Go back" accessibilityRole="button">
             <Ionicons name="chevron-back" size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.favButton} onPress={() => toggleFavorite(recipe.id)}>
+            <TouchableOpacity style={styles.favButton} onPress={() => toggleFavorite(recipe.id)} accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'} accessibilityRole="button" accessibilityState={{ checked: isFavorite }}>
               <Ionicons
                 name={isFavorite ? 'star' : 'star-outline'}
                 size={20}
@@ -133,6 +133,9 @@ export default function RecipeDetailScreen() {
                 style={styles.ingredientRow}
                 onPress={() => toggleIngredient(i)}
                 activeOpacity={0.7}
+                accessibilityLabel={ing.name}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isChecked }}
               >
                 <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
                   {isChecked && <Ionicons name="checkmark" size={14} color="#fff" />}
@@ -164,6 +167,8 @@ export default function RecipeDetailScreen() {
           <TouchableOpacity
             style={styles.cookingButton}
             onPress={() => { setCurrentStep(0); setCookingMode(true); }}
+            accessibilityLabel="Start cooking mode"
+            accessibilityRole="button"
           >
             <Ionicons name="flame" size={18} color="#fff" style={{ marginRight: 8 }} />
             <Text style={styles.cookingButtonText}>Start Cooking</Text>
@@ -177,7 +182,7 @@ export default function RecipeDetailScreen() {
       <Modal visible={cookingMode} animationType="slide" presentationStyle="fullScreen">
         <SafeAreaView style={styles.cookingContainer}>
           <View style={styles.cookingHeader}>
-            <TouchableOpacity onPress={() => setCookingMode(false)} style={styles.cookingClose}>
+            <TouchableOpacity onPress={() => setCookingMode(false)} style={styles.cookingClose} accessibilityLabel="Close cooking mode" accessibilityRole="button">
               <Ionicons name="close" size={24} color={Colors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.cookingTitle} numberOfLines={1}>{recipe.name}</Text>
@@ -210,6 +215,9 @@ export default function RecipeDetailScreen() {
               style={[styles.cookingNavBtn, currentStep === 0 && styles.cookingNavBtnDisabled]}
               onPress={() => setCurrentStep((s) => Math.max(0, s - 1))}
               disabled={currentStep === 0}
+              accessibilityLabel="Previous step"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: currentStep === 0 }}
             >
               <Ionicons name="chevron-back" size={20} color={currentStep === 0 ? Colors.textTertiary : Colors.textPrimary} />
               <Text style={[styles.cookingNavBtnText, currentStep === 0 && { color: Colors.textTertiary }]}>Previous</Text>
@@ -219,6 +227,8 @@ export default function RecipeDetailScreen() {
               <TouchableOpacity
                 style={[styles.cookingNavBtn, styles.cookingNavBtnPrimary]}
                 onPress={() => setCurrentStep((s) => s + 1)}
+                accessibilityLabel="Next step"
+                accessibilityRole="button"
               >
                 <Text style={styles.cookingNavBtnPrimaryText}>Next</Text>
                 <Ionicons name="chevron-forward" size={20} color="#fff" />
@@ -227,6 +237,8 @@ export default function RecipeDetailScreen() {
               <TouchableOpacity
                 style={[styles.cookingNavBtn, styles.cookingNavBtnPrimary]}
                 onPress={() => setCookingMode(false)}
+                accessibilityLabel="Finish cooking"
+                accessibilityRole="button"
               >
                 <Ionicons name="checkmark" size={20} color="#fff" />
                 <Text style={styles.cookingNavBtnPrimaryText}>Done</Text>
