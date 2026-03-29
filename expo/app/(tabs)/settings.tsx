@@ -81,7 +81,7 @@ export default function SettingsScreen() {
         {/* About */}
         <Text style={styles.sectionLabel}>ABOUT</Text>
         <View style={styles.settingsGroup}>
-          <SettingRow label="Privacy Policy" isLast />
+          <SettingRow label="Privacy Policy" onPress={() => router.push('/privacy')} isLast />
         </View>
 
         {/* Delete */}
