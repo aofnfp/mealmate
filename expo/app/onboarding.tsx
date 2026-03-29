@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  TextInput,
+  Alert,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
@@ -50,7 +53,25 @@ export default function OnboardingScreen() {
     completeOnboarding,
   } = useUserStore();
 
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customCalorieText, setCustomCalorieText] = useState('');
+
   const { generateNewPlan } = useMealStore();
+
+  const handleCustomCalorie = () => {
+    setShowCustomInput(true);
+  };
+
+  const handleCustomCalorieSubmit = () => {
+    const val = parseInt(customCalorieText, 10);
+    if (!isNaN(val) && val >= 800 && val <= 6000) {
+      setCalorieTarget(val);
+      setShowCustomInput(false);
+      Keyboard.dismiss();
+    } else {
+      Alert.alert('Invalid Value', 'Enter a number between 800 and 6,000.');
+    }
+  };
 
   const handleFinish = () => {
     completeOnboarding();
@@ -232,10 +253,30 @@ export default function OnboardingScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.presetChip} onPress={() => setCalorieTarget(2000)} accessibilityLabel="Set custom calorie target" accessibilityRole="button">
+            <TouchableOpacity style={styles.presetChip} onPress={handleCustomCalorie} accessibilityLabel="Set custom calorie target" accessibilityRole="button">
               <Text style={styles.presetChipText}>Custom</Text>
             </TouchableOpacity>
           </View>
+          {showCustomInput && (
+            <View style={styles.customInputRow}>
+              <TextInput
+                style={styles.customInput}
+                value={customCalorieText}
+                onChangeText={setCustomCalorieText}
+                keyboardType="number-pad"
+                placeholder="e.g. 1700"
+                placeholderTextColor={Colors.textTertiary}
+                autoFocus
+                maxLength={5}
+                onSubmitEditing={handleCustomCalorieSubmit}
+                returnKeyType="done"
+                accessibilityLabel="Custom calorie amount"
+              />
+              <TouchableOpacity style={styles.customInputButton} onPress={handleCustomCalorieSubmit} accessibilityLabel="Confirm custom calories" accessibilityRole="button">
+                <Ionicons name="checkmark" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
           <View style={styles.bottomAction}>
             <TouchableOpacity style={styles.primaryButton} onPress={handleFinish} accessibilityLabel="Generate my meal plan" accessibilityRole="button">
               <Text style={styles.primaryButtonText}>Generate My Plan</Text>
@@ -324,6 +365,19 @@ const styles = StyleSheet.create({
   presetChipSelected: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   presetChipText: { fontFamily: 'DM Sans', fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
   presetChipTextSelected: { color: '#fff' },
+  // Custom calorie input
+  customInputRow: {
+    flexDirection: 'row', alignItems: 'center', marginTop: 20, gap: 10, justifyContent: 'center',
+  },
+  customInput: {
+    width: 140, height: 48, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: Colors.surface, paddingHorizontal: 14, textAlign: 'center',
+    fontFamily: 'DM Sans', fontSize: 16, color: Colors.textPrimary,
+  },
+  customInputButton: {
+    width: 48, height: 48, borderRadius: 12, backgroundColor: Colors.accent,
+    alignItems: 'center', justifyContent: 'center',
+  },
   // Actions
   bottomAction: { paddingVertical: 20, paddingBottom: 32 },
   primaryButton: { backgroundColor: Colors.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },

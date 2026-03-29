@@ -184,11 +184,6 @@ export default function GroceryScreen() {
           );
         })}
 
-        {/* Ad banner placeholder */}
-        <View style={styles.adBanner}>
-          <Text style={styles.adBannerText}>AD BANNER — 320 x 50</Text>
-        </View>
-
         <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
@@ -252,13 +247,6 @@ const styles = StyleSheet.create({
   itemNameChecked: { textDecorationLine: 'line-through', color: Colors.textTertiary },
   itemQuantity: { fontFamily: 'DM Sans', fontSize: 13, color: Colors.textSecondary },
   itemQuantityChecked: { color: Colors.textTertiary },
-  // Ad banner
-  adBanner: {
-    marginHorizontal: 20, marginTop: 20, paddingVertical: 14,
-    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
-    alignItems: 'center', backgroundColor: Colors.surface,
-  },
-  adBannerText: { fontFamily: 'DM Sans', fontSize: 12, color: Colors.textTertiary },
   // Empty state
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyTitle: { fontFamily: 'DM Serif Display', fontSize: 24, color: Colors.textPrimary, marginBottom: 8 },

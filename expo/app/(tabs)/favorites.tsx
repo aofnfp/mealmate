@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,19 +6,35 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useMealStore } from '@/store/meal-store';
 import { getRecipeById } from '@/lib/plan-generator';
+import { Recipe } from '@/types';
+
+type SortMode = 'name' | 'calories' | 'time';
+
+const SORT_LABELS: Record<SortMode, string> = {
+  name: 'A–Z',
+  calories: 'Calories',
+  time: 'Cook Time',
+};
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const { favorites } = useMealStore();
+  const [sortMode, setSortMode] = useState<SortMode>('name');
 
-  const favoriteRecipes = favorites
-    .map((id) => getRecipeById(id))
-    .filter(Boolean);
+  const favoriteRecipes = useMemo(() => {
+    const recipes = favorites.map((id) => getRecipeById(id)).filter(Boolean) as Recipe[];
+    return recipes.sort((a, b) => {
+      if (sortMode === 'calories') return a.calories - b.calories;
+      if (sortMode === 'time') return a.totalTimeMinutes - b.totalTimeMinutes;
+      return a.name.localeCompare(b.name);
+    });
+  }, [favorites, sortMode]);
 
   if (favoriteRecipes.length === 0) {
     return (
@@ -40,8 +56,21 @@ export default function FavoritesScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Favorites</Text>
-        <TouchableOpacity accessibilityLabel="Sort recipes" accessibilityRole="button">
-          <Text style={styles.sortButton}>Sort by</Text>
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert(
+              'Sort By',
+              undefined,
+              (['name', 'calories', 'time'] as SortMode[]).map((mode) => ({
+                text: `${SORT_LABELS[mode]}${sortMode === mode ? ' ✓' : ''}`,
+                onPress: () => setSortMode(mode),
+              }))
+            );
+          }}
+          accessibilityLabel={`Sort recipes, current: ${SORT_LABELS[sortMode]}`}
+          accessibilityRole="button"
+        >
+          <Text style={styles.sortButton}>{SORT_LABELS[sortMode]}</Text>
         </TouchableOpacity>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.grid}>
