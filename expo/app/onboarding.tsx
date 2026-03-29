@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   // Chips
   chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   chip: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10,
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
     borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
   chipSelected: { backgroundColor: Colors.accent, borderColor: Colors.accent },
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   presetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
   presetChip: {
-    paddingHorizontal: 22, paddingVertical: 12, borderRadius: 14,
+    paddingHorizontal: 22, paddingVertical: 14, borderRadius: 14,
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, minWidth: 90, alignItems: 'center',
   },
   presetChipSelected: { backgroundColor: Colors.accent, borderColor: Colors.accent },

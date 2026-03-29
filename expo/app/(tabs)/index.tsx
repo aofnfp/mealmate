@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   },
   mealCardMeta: { fontFamily: 'DM Sans', fontSize: 13, color: Colors.textTertiary },
   swapIconButton: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.background,
+    width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.background,
     alignItems: 'center', justifyContent: 'center', alignSelf: 'center',
   },
   // Macro bar

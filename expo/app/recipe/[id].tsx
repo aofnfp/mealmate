@@ -305,9 +305,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
+  checkboxTouchable: {
+    width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: 4,
+  },
   checkbox: {
     width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: Colors.border,
-    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+    alignItems: 'center', justifyContent: 'center',
   },
   checkboxChecked: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   ingredientText: { flex: 1, fontFamily: 'DM Sans', fontSize: 15, color: Colors.textPrimary },
