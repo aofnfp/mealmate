@@ -3,15 +3,19 @@ import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { StatusBar, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { requestTrackingPermission } from '@/lib/tracking';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useEffect(() => {
-    SplashScreen.hideAsync();
-    if (Platform.OS !== 'web') {
-      StatusBar.setBarStyle('dark-content');
-    }
+    (async () => {
+      await SplashScreen.hideAsync();
+      if (Platform.OS !== 'web') {
+        StatusBar.setBarStyle('dark-content');
+        await requestTrackingPermission();
+      }
+    })();
   }, []);
 
   return (

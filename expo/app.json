@@ -15,14 +15,23 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aofnfp.mealmate"
+      "bundleIdentifier": "com.aofnfp.mealmate",
+      "infoPlist": {
+        "SKAdNetworkItems": [
+          { "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork" }
+        ],
+        "NSUserTrackingUsageDescription": "This helps us show relevant ads and support the free version of MealMate."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FAFAF7"
       },
-      "package": "com.aofnfp.mealmate"
+      "package": "com.aofnfp.mealmate",
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -34,10 +43,22 @@
         {
           "origin": "https://mealmate.app/"
         }
+      ],
+      [
+        "expo-tracking-transparency"
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    },
+    "owner": "aofnfp",
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
