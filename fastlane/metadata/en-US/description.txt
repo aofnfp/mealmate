@@ -1,0 +1,11 @@
+MealMate is an AI-powered meal planning app that takes the stress out of deciding what to eat. Get personalized meal plans, discover new recipes, and auto-generate grocery lists.
+
+Features:
+• AI-powered weekly meal plan generation
+• 1000+ recipes with nutritional information
+• Auto-generated grocery lists by store section
+• Dietary preference support (vegan, keto, gluten-free, and more)
+• Calorie and macro tracking
+• Save and organize favorite recipes
+
+Built by the Abraham Oladotun Foundation NFP.
