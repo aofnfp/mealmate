@@ -182,6 +182,8 @@ export default function SettingsScreen() {
           <Text style={styles.deleteButtonText}>Delete All Data</Text>
         </TouchableOpacity>
 
+        <Text style={styles.brandingText}>App by aoftech</Text>
+
         <View style={{ height: 40 }} />
       </ScrollView>
 
@@ -291,4 +293,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: Colors.accent,
   },
   modalSaveText: { fontFamily: 'DM Sans', fontSize: 15, fontWeight: '600', color: '#fff' },
+  brandingText: {
+    fontFamily: 'DM Sans', fontSize: 11, color: Colors.textTertiary,
+    textAlign: 'center', marginTop: 24,
+  },
 });
